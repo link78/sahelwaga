@@ -7,8 +7,7 @@ import { useEffect, useState } from 'react';
 const nav = [
   { href: '/dashboard', label: 'Overview' },
   { href: '/dashboard/suppliers', label: 'Suppliers' },
-  // Phase 1+ — uncomment as modules ship
-  // { href: '/dashboard/products', label: 'Products' },
+  { href: '/dashboard/products', label: 'Products' },
   // { href: '/dashboard/clients', label: 'Clients' },
   // { href: '/dashboard/purchase-orders', label: 'Purchase Orders' },
   // { href: '/dashboard/import-batches', label: 'Import Batches' },
