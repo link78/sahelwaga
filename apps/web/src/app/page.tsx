@@ -11,6 +11,8 @@ export default function HomePage() {
           <nav className="flex items-center gap-6 text-sm text-brand-neutral-500">
             <Link href="/products" className="hover:text-brand-neutral-900">Products</Link>
             <Link href="/about" className="hover:text-brand-neutral-900">About</Link>
+            <Link href="/manufacturers" className="hover:text-brand-neutral-900">Manufacturers</Link>
+            <Link href="/buyers" className="hover:text-brand-neutral-900">Buyers</Link>
             <Link href="/contact" className="hover:text-brand-neutral-900">Contact</Link>
             <Link
               href="/login"
