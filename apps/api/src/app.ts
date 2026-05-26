@@ -9,6 +9,7 @@ import { errorHandler } from './middleware/error-handler.js';
 import { authLimiter, globalLimiter } from './middleware/rate-limit.js';
 import { authRouter } from './modules/auth/auth.routes.js';
 import { suppliersRouter } from './modules/suppliers/suppliers.routes.js';
+import { productsRouter } from './modules/products/products.routes.js';
 import { healthRouter } from './modules/health/health.routes.js';
 
 export function createApp(): express.Express {
@@ -28,10 +29,10 @@ export function createApp(): express.Express {
   app.use('/health', healthRouter);
   app.use('/auth', authLimiter, authRouter);
   app.use('/suppliers', suppliersRouter);
+  app.use('/products', productsRouter);
 
   // ---------------------------------------------------------------------
   // Phase 1+ modules — mount here as they are built.
-  // app.use('/products', productsRouter);
   // app.use('/clients', clientsRouter);
   // app.use('/documents', documentsRouter);
   // app.use('/purchase-orders', purchaseOrdersRouter);
