@@ -12,6 +12,7 @@ import { suppliersRouter } from './modules/suppliers/suppliers.routes.js';
 import { productsRouter } from './modules/products/products.routes.js';
 import { clientsRouter } from './modules/clients/clients.routes.js';
 import { healthRouter } from './modules/health/health.routes.js';
+import { dashboardRouter } from './modules/dashboard/dashboard.routes.js';
 
 export function createApp(): express.Express {
   const app = express();
@@ -32,6 +33,7 @@ export function createApp(): express.Express {
   app.use('/suppliers', suppliersRouter);
   app.use('/products', productsRouter);
   app.use('/clients', clientsRouter);
+  app.use('/dashboard', dashboardRouter);
 
   // ---------------------------------------------------------------------
   // Phase 1+ modules — mount here as they are built.
