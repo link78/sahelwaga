@@ -3,7 +3,6 @@ const nextConfig = {
   reactStrictMode: true,
   experimental: {
     typedRoutes: false,
-    allowedDevOrigins: ['66.94.119.88'],
   },
 };
 
