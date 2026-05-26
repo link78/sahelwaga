@@ -1,0 +1,670 @@
+// Sahel Pharma Group Portal — Prisma schema
+// Covers all modules from the build plan: identity, suppliers, products,
+// documents, orders/imports, clients, inventory, and public-site leads.
+//
+// Conventions:
+// - Every entity has `id` (cuid), `createdAt`, `updatedAt`.
+// - Soft-delete via nullable `deletedAt` on Supplier, Product, Client.
+// - Monetary amounts are stored as Decimal(14,4) with a sibling `currency` enum.
+// - `Document` is cross-cutting; `DocumentLink` is the polymorphic join.
+// - Stock-on-hand is derived from `StockMovement` aggregates (not stored).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Identity & access
+// ---------------------------------------------------------------------------
+
+enum UserRole {
+  ADMIN
+  OPS
+  SALES
+  SUPPLIER_PORTAL
+  CLIENT_PORTAL
+}
+
+enum Locale {
+  EN
+  FR
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  locale       Locale   @default(EN)
+  role         UserRole
+  isActive     Boolean  @default(true)
+
+  // Portal scope: only set for SUPPLIER_PORTAL / CLIENT_PORTAL users
+  supplierId String?
+  supplier   Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  clientId   String?
+  client     Client?   @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  uploadedDocuments Document[] @relation("UploadedBy")
+  auditLogs         AuditLog[] @relation("Actor")
+
+  @@index([supplierId])
+  @@index([clientId])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actor      User?    @relation("Actor", fields: [actorId], references: [id], onDelete: SetNull)
+  entity     String
+  entityId   String
+  action     String
+  beforeJson Json?
+  afterJson  Json?
+  createdAt  DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Suppliers
+// ---------------------------------------------------------------------------
+
+enum SupplierStatus {
+  PROSPECT
+  UNDER_REVIEW
+  APPROVED
+  BLOCKED
+  REJECTED
+}
+
+enum SupplierRating {
+  A
+  B
+  C
+}
+
+enum WhoGmpStatus {
+  UNKNOWN
+  PENDING
+  VERIFIED
+  EXPIRED
+}
+
+model Supplier {
+  id             String         @id @default(cuid())
+  name           String
+  country        String
+  status         SupplierStatus @default(PROSPECT)
+  whoGmpStatus   WhoGmpStatus   @default(UNKNOWN)
+  rating         SupplierRating?
+  notes          String?
+  // Public-catalog visibility toggle for supplier name (competitive reasons)
+  showSupplierPublicly Boolean @default(false)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  contacts       SupplierContact[]
+  vetting        SupplierVetting?
+  exportRecords  SupplierExportRecord[]
+  priceTiers     SupplierPriceTier[]
+  productLinks   ProductSupplier[]
+  purchaseOrders PurchaseOrder[]
+  portalUsers    User[]
+  documentLinks  DocumentLink[]
+
+  @@index([status])
+  @@index([deletedAt])
+}
+
+model SupplierContact {
+  id         String   @id @default(cuid())
+  supplierId String
+  supplier   Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  name       String
+  role       String?
+  email      String?
+  phone      String?
+  isPrimary  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([supplierId])
+}
+
+model SupplierVetting {
+  id                     String    @id @default(cuid())
+  supplierId             String    @unique
+  supplier               Supplier  @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  whoGmpVerified         Boolean   @default(false)
+  coaReceived            Boolean   @default(false)
+  stabilityHotClimate    Boolean   @default(false)
+  westAfricaReferences   Boolean   @default(false)
+  reviewerId             String?
+  decisionDate           DateTime?
+  notes                  String?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+}
+
+model SupplierExportRecord {
+  id         String   @id @default(cuid())
+  supplierId String
+  supplier   Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  country    String
+  year       Int
+  volume     String?
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([supplierId])
+}
+
+enum Currency {
+  USD
+  EUR
+  XOF
+  INR
+}
+
+enum Incoterm {
+  EXW
+  FOB
+  CIF
+  CFR
+  DAP
+  DDP
+}
+
+model SupplierPriceTier {
+  id         String    @id @default(cuid())
+  supplierId String
+  supplier   Supplier  @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  minQty     Int
+  unitPrice  Decimal   @db.Decimal(14, 4)
+  currency   Currency
+  incoterm   Incoterm?
+  validFrom  DateTime?
+  validTo    DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([supplierId, productId])
+}
+
+// ---------------------------------------------------------------------------
+// Products
+// ---------------------------------------------------------------------------
+
+enum ProductCategory {
+  ANTIBIOTIC
+  ANTIMALARIAL
+  PAINKILLER
+  PEDIATRIC_SYRUP
+  IV_FLUID
+  CONSUMABLE
+  OTHER
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  INACTIVE
+}
+
+model Product {
+  id                 String          @id @default(cuid())
+  name               String
+  inn                String?
+  category           ProductCategory
+  form               String?
+  strength           String?
+  packSize           String?
+  shelfLifeMonths    Int?
+  storageConditions  String?
+  status             ProductStatus   @default(DRAFT)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  supplierLinks      ProductSupplier[]
+  pricing            ProductPricing[]
+  priceListItems     ClientPriceListItem[]
+  supplierPriceTiers SupplierPriceTier[]
+  poLines            PurchaseOrderLine[]
+  soLines            SalesOrderLine[]
+  importBatchLines   ImportBatchLine[]
+  stockMovements     StockMovement[]
+  documentLinks      DocumentLink[]
+
+  @@index([category])
+  @@index([status])
+  @@index([deletedAt])
+}
+
+model ProductSupplier {
+  id                  String   @id @default(cuid())
+  productId           String
+  product             Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  supplierId          String
+  supplier            Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  isPrimary           Boolean  @default(false)
+  supplierProductCode String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([productId, supplierId])
+}
+
+model ProductPricing {
+  id                   String   @id @default(cuid())
+  productId            String
+  product              Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  fobCost              Decimal  @db.Decimal(14, 4)
+  landedCostEstimate   Decimal? @db.Decimal(14, 4)
+  currency             Currency
+  effectiveFrom        DateTime @default(now())
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([productId, effectiveFrom])
+}
+
+model ClientPriceList {
+  id        String   @id @default(cuid())
+  name      String
+  // Optional binding to a specific client; null means "default for a client type"
+  clientId  String?
+  client    Client?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  clientType ClientType?
+  currency  Currency
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items ClientPriceListItem[]
+
+  @@index([clientId])
+}
+
+model ClientPriceListItem {
+  id            String          @id @default(cuid())
+  priceListId   String
+  priceList     ClientPriceList @relation(fields: [priceListId], references: [id], onDelete: Cascade)
+  productId     String
+  product       Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  unitPrice     Decimal         @db.Decimal(14, 4)
+  validFrom     DateTime?
+  validTo       DateTime?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@unique([priceListId, productId])
+}
+
+// ---------------------------------------------------------------------------
+// Clients
+// ---------------------------------------------------------------------------
+
+enum ClientType {
+  CLINIC
+  PHARMACY
+  NGO
+  DISTRIBUTOR
+  GOVERNMENT
+}
+
+enum ClientStatus {
+  ACTIVE
+  INACTIVE
+  ON_HOLD
+}
+
+model Client {
+  id              String       @id @default(cuid())
+  name            String
+  type            ClientType
+  country         String
+  city            String?
+  address         String?
+  creditTermsDays Int?
+  status          ClientStatus @default(ACTIVE)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  contacts      ClientContact[]
+  priceLists    ClientPriceList[]
+  salesOrders   SalesOrder[]
+  portalUsers   User[]
+  documentLinks DocumentLink[]
+
+  @@index([type])
+  @@index([status])
+  @@index([deletedAt])
+}
+
+model ClientContact {
+  id        String   @id @default(cuid())
+  clientId  String
+  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  name      String
+  role      String?
+  email     String?
+  phone     String?
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientId])
+}
+
+// ---------------------------------------------------------------------------
+// Documents (cross-cutting)
+// ---------------------------------------------------------------------------
+
+enum DocumentType {
+  WHO_GMP
+  COA
+  STABILITY
+  IMPORT_PERMIT
+  INVOICE
+  PACKING_LIST
+  BL_AWB
+  LICENSE
+  CONTRACT
+  OTHER
+}
+
+model Document {
+  id           String       @id @default(cuid())
+  type         DocumentType
+  title        String
+  s3Key        String
+  mimeType     String?
+  sizeBytes    Int?
+  issueDate    DateTime?
+  expiryDate   DateTime?
+  uploadedById String?
+  uploadedBy   User?        @relation("UploadedBy", fields: [uploadedById], references: [id], onDelete: SetNull)
+  notes        String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  links DocumentLink[]
+
+  @@index([type])
+  @@index([expiryDate])
+}
+
+// Polymorphic join: a document can be linked to multiple entities.
+// Exactly one of the FK columns is expected to be non-null per row, enforced
+// at the application layer (Prisma can't enforce XOR constraints natively).
+model DocumentLink {
+  id             String   @id @default(cuid())
+  documentId     String
+  document       Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  supplierId      String?
+  supplier        Supplier?      @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  productId       String?
+  product         Product?       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  purchaseOrderId String?
+  purchaseOrder   PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  importBatchId   String?
+  importBatch     ImportBatch?   @relation(fields: [importBatchId], references: [id], onDelete: Cascade)
+  clientId        String?
+  client          Client?        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  salesOrderId    String?
+  salesOrder      SalesOrder?    @relation(fields: [salesOrderId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([documentId])
+  @@index([supplierId])
+  @@index([productId])
+  @@index([purchaseOrderId])
+  @@index([importBatchId])
+  @@index([clientId])
+  @@index([salesOrderId])
+}
+
+// ---------------------------------------------------------------------------
+// Purchase Orders & Imports
+// ---------------------------------------------------------------------------
+
+enum PurchaseOrderStatus {
+  DRAFT
+  SENT
+  CONFIRMED
+  IN_PRODUCTION
+  SHIPPED
+  RECEIVED
+  CANCELLED
+}
+
+model PurchaseOrder {
+  id                  String              @id @default(cuid())
+  poNumber            String              @unique
+  supplierId          String
+  supplier            Supplier            @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  status              PurchaseOrderStatus @default(DRAFT)
+  currency            Currency
+  incoterm            Incoterm?
+  targetShipmentDate  DateTime?
+  notes               String?
+  // Cached totals (sum of lines). Recompute on line write.
+  subtotal            Decimal             @default(0) @db.Decimal(14, 4)
+  total               Decimal             @default(0) @db.Decimal(14, 4)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  lines         PurchaseOrderLine[]
+  importBatches ImportBatch[]
+  documentLinks DocumentLink[]
+
+  @@index([supplierId])
+  @@index([status])
+}
+
+model PurchaseOrderLine {
+  id              String        @id @default(cuid())
+  purchaseOrderId String
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  productId       String
+  product         Product       @relation(fields: [productId], references: [id], onDelete: Restrict)
+  qty             Int
+  unitPrice       Decimal       @db.Decimal(14, 4)
+  lineTotal       Decimal       @db.Decimal(14, 4)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([purchaseOrderId])
+}
+
+enum ImportBatchStatus {
+  PENDING
+  IN_TRANSIT
+  CUSTOMS
+  CLEARED
+  RECEIVED
+}
+
+model ImportBatch {
+  id                String            @id @default(cuid())
+  batchNumber       String            @unique
+  purchaseOrderId   String
+  purchaseOrder     PurchaseOrder     @relation(fields: [purchaseOrderId], references: [id], onDelete: Restrict)
+  dgpmlAuthNumber   String?
+  status            ImportBatchStatus @default(PENDING)
+  shippedAt         DateTime?
+  arrivedAt         DateTime?
+  customsClearedAt  DateTime?
+  notes             String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  lines         ImportBatchLine[]
+  documentLinks DocumentLink[]
+
+  @@index([purchaseOrderId])
+  @@index([status])
+}
+
+model ImportBatchLine {
+  id              String      @id @default(cuid())
+  importBatchId   String
+  importBatch     ImportBatch @relation(fields: [importBatchId], references: [id], onDelete: Cascade)
+  productId       String
+  product         Product     @relation(fields: [productId], references: [id], onDelete: Restrict)
+  qtyShipped      Int
+  qtyReceived     Int         @default(0)
+  lotNumber       String?
+  manufactureDate DateTime?
+  expiryDate      DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([importBatchId])
+  @@index([productId])
+}
+
+// ---------------------------------------------------------------------------
+// Sales Orders
+// ---------------------------------------------------------------------------
+
+enum SalesOrderStatus {
+  DRAFT
+  CONFIRMED
+  PICKED
+  DELIVERED
+  PAID
+  CANCELLED
+}
+
+model SalesOrder {
+  id           String           @id @default(cuid())
+  soNumber     String           @unique
+  clientId     String
+  client       Client           @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  status       SalesOrderStatus @default(DRAFT)
+  currency     Currency
+  deliveryDate DateTime?
+  notes        String?
+  subtotal     Decimal          @default(0) @db.Decimal(14, 4)
+  total        Decimal          @default(0) @db.Decimal(14, 4)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  lines         SalesOrderLine[]
+  documentLinks DocumentLink[]
+
+  @@index([clientId])
+  @@index([status])
+}
+
+model SalesOrderLine {
+  id           String     @id @default(cuid())
+  salesOrderId String
+  salesOrder   SalesOrder @relation(fields: [salesOrderId], references: [id], onDelete: Cascade)
+  productId    String
+  product      Product    @relation(fields: [productId], references: [id], onDelete: Restrict)
+  qty          Int
+  unitPrice    Decimal    @db.Decimal(14, 4)
+  lineTotal    Decimal    @db.Decimal(14, 4)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([salesOrderId])
+}
+
+// ---------------------------------------------------------------------------
+// Inventory
+// ---------------------------------------------------------------------------
+
+model StockLocation {
+  id        String   @id @default(cuid())
+  name      String
+  country   String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  movements StockMovement[]
+}
+
+enum StockMovementReason {
+  IMPORT_RECEIPT
+  SALES_DELIVERY
+  ADJUSTMENT
+  RETURN
+}
+
+model StockMovement {
+  id          String              @id @default(cuid())
+  productId   String
+  product     Product             @relation(fields: [productId], references: [id], onDelete: Restrict)
+  locationId  String
+  location    StockLocation       @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  qty         Int // positive in / negative out
+  reason      StockMovementReason
+  refType     String? // e.g. 'ImportBatch', 'SalesOrder'
+  refId       String?
+  lotNumber   String?
+  expiryDate  DateTime?
+  occurredAt  DateTime            @default(now())
+  createdAt   DateTime            @default(now())
+
+  @@index([productId, locationId])
+  @@index([refType, refId])
+}
+
+// ---------------------------------------------------------------------------
+// Public-site leads (Request partnership / Request account / Contact form)
+// ---------------------------------------------------------------------------
+
+enum LeadKind {
+  PARTNERSHIP
+  ACCOUNT
+  CONTACT
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  ARCHIVED
+}
+
+model Lead {
+  id        String     @id @default(cuid())
+  kind      LeadKind
+  status    LeadStatus @default(NEW)
+  name      String
+  email     String
+  company   String?
+  country   String?
+  message   String?
+  payload   Json?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([kind])
+  @@index([status])
+}
