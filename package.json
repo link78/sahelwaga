@@ -1,0 +1,27 @@
+{
+  "name": "sahelwaga",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sahel Pharma Group Portal — B2B pharmaceutical supply chain platform",
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "dev": "pnpm -r --parallel --filter './apps/*' run dev",
+    "build": "pnpm -r run build",
+    "lint": "pnpm -r run lint",
+    "typecheck": "pnpm -r run typecheck",
+    "test": "pnpm -r run test",
+    "db:generate": "pnpm --filter @sahelwaga/db run generate",
+    "db:migrate": "pnpm --filter @sahelwaga/db run migrate",
+    "db:seed": "pnpm --filter @sahelwaga/db run seed",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3",
+    "typescript": "^5.5.4"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}
