@@ -8,7 +8,7 @@ const nav = [
   { href: '/dashboard', label: 'Overview' },
   { href: '/dashboard/suppliers', label: 'Suppliers' },
   { href: '/dashboard/products', label: 'Products' },
-  // { href: '/dashboard/clients', label: 'Clients' },
+  { href: '/dashboard/clients', label: 'Clients' },
   // { href: '/dashboard/purchase-orders', label: 'Purchase Orders' },
   // { href: '/dashboard/import-batches', label: 'Import Batches' },
   // { href: '/dashboard/sales-orders', label: 'Sales Orders' },
