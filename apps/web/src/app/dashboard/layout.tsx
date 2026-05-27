@@ -9,10 +9,9 @@ const nav = [
   { href: '/dashboard/suppliers', label: 'Suppliers' },
   { href: '/dashboard/products', label: 'Products' },
   { href: '/dashboard/clients', label: 'Clients' },
-  // { href: '/dashboard/purchase-orders', label: 'Purchase Orders' },
-  // { href: '/dashboard/import-batches', label: 'Import Batches' },
-  // { href: '/dashboard/sales-orders', label: 'Sales Orders' },
-  // { href: '/dashboard/documents', label: 'Documents' },
+  { href: '/dashboard/purchase-orders', label: 'Purchase Orders' },
+  { href: '/dashboard/import-batches', label: 'Import Batches' },
+  { href: '/dashboard/sales-orders', label: 'Sales Orders' },
 ];
 
 interface SessionUser {
