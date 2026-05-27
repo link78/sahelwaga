@@ -34,6 +34,17 @@ async function main() {
     },
   });
 
+  await prisma.user.upsert({
+    where: { email: 'absalim78@yahoo.com' },
+    update: {},
+    create: {
+      email: 'absalim78@yahoo.com',
+      name: 'Abdoul Salim',
+      passwordHash: adminPassword,
+      role: UserRole.ADMIN,
+    },
+  });
+
   // --- Suppliers ---------------------------------------------------------
   const supplierData = [
     { name: 'Mumbai Pharma Ltd', country: 'India', status: SupplierStatus.APPROVED, whoGmpStatus: WhoGmpStatus.VERIFIED },
@@ -91,6 +102,7 @@ async function main() {
 
   console.log('Seed complete.');
   console.log('Login: admin@sahelpharma.local / admin123!');
+  console.log('Login: absalim78@yahoo.com / admin123!');
   console.log('Login: ops@sahelpharma.local / ops123!');
 }
 

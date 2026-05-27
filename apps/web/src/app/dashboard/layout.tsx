@@ -7,13 +7,13 @@ import { useEffect, useState } from 'react';
 const nav = [
   { href: '/dashboard', label: 'Overview' },
   { href: '/dashboard/suppliers', label: 'Suppliers' },
-  // Phase 1+ — uncomment as modules ship
-  // { href: '/dashboard/products', label: 'Products' },
-  // { href: '/dashboard/clients', label: 'Clients' },
-  // { href: '/dashboard/purchase-orders', label: 'Purchase Orders' },
-  // { href: '/dashboard/import-batches', label: 'Import Batches' },
-  // { href: '/dashboard/sales-orders', label: 'Sales Orders' },
-  // { href: '/dashboard/documents', label: 'Documents' },
+  { href: '/dashboard/products', label: 'Products' },
+  { href: '/dashboard/clients', label: 'Clients' },
+  { href: '/dashboard/purchase-orders', label: 'Purchase Orders' },
+  { href: '/dashboard/import-batches', label: 'Import Batches' },
+  { href: '/dashboard/sales-orders', label: 'Sales Orders' },
+  { href: '/dashboard/documents', label: 'Documents' },
+  { href: '/dashboard/stock', label: 'Stock' },
 ];
 
 interface SessionUser {
