@@ -33,7 +33,10 @@ export default function LoginPage() {
         window.localStorage.setItem('sahelwaga.refresh', data.refresh);
         window.localStorage.setItem('sahelwaga.user', JSON.stringify(data.user));
       }
-      router.push('/dashboard');
+      // Phase 5: route portal users into their dedicated portal experience.
+      if (data.user?.role === 'SUPPLIER_PORTAL') router.push('/portal/supplier');
+      else if (data.user?.role === 'CLIENT_PORTAL') router.push('/portal/client');
+      else router.push('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {

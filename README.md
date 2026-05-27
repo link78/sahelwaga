@@ -78,6 +78,8 @@ Demo credentials (after `db:seed`):
 
 - **Admin** — `admin@sahelpharma.local` / `admin123!`
 - **Ops (BF, FR)** — `ops@sahelpharma.local` / `ops123!`
+- **Supplier portal** — `supplier@mumbai-pharma.local` / `portal123!`
+- **Client portal** — `client@saint-camille.local` / `portal123!`
 
 ---
 
@@ -116,7 +118,12 @@ lifecycle and stock side-effects.
   - [x] Document expiry-scan worker (daily + on-demand `POST /compliance/expiry-scan/run`)
   - [x] Compliance dashboard surfacing expiry alerts (`/dashboard/compliance`)
   - [x] PDF generation for purchase orders and sales orders via `pdfkit`
-- [ ] **Phase 5 — External portals** (Supplier / Client)
+- [x] **Phase 5 — External portals** (Supplier / Client)
+  - [x] `/portal/me` API aggregating profile + KPIs for the signed-in portal user
+  - [x] Document list & link creation scoped to the portal user's own supplier/client
+  - [x] Web `/portal/supplier` (overview, PO list/detail with PDF, documents) and `/portal/client` (overview, SO list/detail with PDF, catalog, documents) with role-gated layout
+  - [x] Login redirect: SUPPLIER_PORTAL/CLIENT_PORTAL routed into their portal; `/dashboard` redirects portal users out
+  - [x] Seeded demo portal users (`supplier@mumbai-pharma.local`, `client@saint-camille.local`)
 - [ ] **Phase 6 — Hardening** (Playwright E2E, observability, runbooks)
 
 Extension points are marked with `Phase N+` comments throughout the code

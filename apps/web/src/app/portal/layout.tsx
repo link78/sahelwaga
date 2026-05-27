@@ -4,21 +4,6 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-const nav = [
-  { href: '/dashboard', label: 'Overview' },
-  { href: '/dashboard/suppliers', label: 'Suppliers' },
-  { href: '/dashboard/products', label: 'Products' },
-  { href: '/dashboard/clients', label: 'Clients' },
-  { href: '/dashboard/purchase-orders', label: 'Purchase Orders' },
-  { href: '/dashboard/import-batches', label: 'Import Batches' },
-  { href: '/dashboard/sales-orders', label: 'Sales Orders' },
-  { href: '/dashboard/documents', label: 'Documents' },
-  { href: '/dashboard/stock', label: 'Stock' },
-  { href: '/dashboard/leads', label: 'Leads' },
-  { href: '/dashboard/compliance', label: 'Compliance' },
-  { href: '/dashboard/audit-logs', label: 'Audit log' },
-];
-
 interface SessionUser {
   id: string;
   name: string;
@@ -26,7 +11,20 @@ interface SessionUser {
   role: string;
 }
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+const SUPPLIER_NAV = [
+  { href: '/portal/supplier', label: 'Overview' },
+  { href: '/portal/supplier/purchase-orders', label: 'Purchase Orders' },
+  { href: '/portal/supplier/documents', label: 'Documents' },
+];
+
+const CLIENT_NAV = [
+  { href: '/portal/client', label: 'Overview' },
+  { href: '/portal/client/sales-orders', label: 'Sales Orders' },
+  { href: '/portal/client/products', label: 'Catalog' },
+  { href: '/portal/client/documents', label: 'Documents' },
+];
+
+export default function PortalLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [user, setUser] = useState<SessionUser | null>(null);
@@ -38,17 +36,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       return;
     }
     const parsed: SessionUser = JSON.parse(raw);
-    // Phase 5: portal users belong to /portal/*, not the internal back office.
-    if (parsed.role === 'SUPPLIER_PORTAL') {
+    if (parsed.role !== 'SUPPLIER_PORTAL' && parsed.role !== 'CLIENT_PORTAL') {
+      // Internal users have their own back office at /dashboard.
+      router.replace('/dashboard');
+      return;
+    }
+    // Bounce users into the right scope if they typed the wrong URL.
+    if (parsed.role === 'SUPPLIER_PORTAL' && pathname.startsWith('/portal/client')) {
       router.replace('/portal/supplier');
       return;
     }
-    if (parsed.role === 'CLIENT_PORTAL') {
+    if (parsed.role === 'CLIENT_PORTAL' && pathname.startsWith('/portal/supplier')) {
       router.replace('/portal/client');
       return;
     }
     setUser(parsed);
-  }, [router]);
+  }, [router, pathname]);
 
   function signOut() {
     window.localStorage.removeItem('sahelwaga.access');
@@ -59,6 +62,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (!user) return null;
 
+  const nav = user.role === 'SUPPLIER_PORTAL' ? SUPPLIER_NAV : CLIENT_NAV;
+  const scopeLabel = user.role === 'SUPPLIER_PORTAL' ? 'Supplier portal' : 'Client portal';
+
   return (
     <div className="flex min-h-screen bg-brand-neutral-50">
       <aside className="w-60 border-r border-brand-neutral-100 bg-white">
@@ -66,6 +72,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <Link href="/" className="font-serif text-lg font-semibold text-brand-green-700">
             Sahel Pharma
           </Link>
+          <div className="mt-1 text-xs uppercase tracking-wide text-brand-neutral-500">{scopeLabel}</div>
         </div>
         <nav className="px-3 py-4">
           {nav.map((n) => {
@@ -91,8 +98,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="flex-1">
         <header className="flex items-center justify-between border-b border-brand-neutral-100 bg-white px-8 py-4">
           <div className="text-sm text-brand-neutral-500">
-            Signed in as <span className="font-medium text-brand-neutral-900">{user.name}</span>{' '}
-            ({user.role})
+            Signed in as <span className="font-medium text-brand-neutral-900">{user.name}</span> ({user.role})
           </div>
           <button
             onClick={signOut}

@@ -100,10 +100,37 @@ async function main() {
     create: { id: 'seed-bf-main-warehouse', name: 'Ouagadougou Main Warehouse', country: 'BF' },
   });
 
+  // --- Portal users (Phase 5) -------------------------------------------
+  const portalPassword = await bcrypt.hash('portal123!', 10);
+  await prisma.user.upsert({
+    where: { email: 'supplier@mumbai-pharma.local' },
+    update: {},
+    create: {
+      email: 'supplier@mumbai-pharma.local',
+      name: 'Mumbai Pharma Portal',
+      passwordHash: portalPassword,
+      role: UserRole.SUPPLIER_PORTAL,
+      supplierId: 'seed-mumbai-pharma-ltd',
+    },
+  });
+  await prisma.user.upsert({
+    where: { email: 'client@saint-camille.local' },
+    update: {},
+    create: {
+      email: 'client@saint-camille.local',
+      name: 'Saint-Camille Portal',
+      passwordHash: portalPassword,
+      role: UserRole.CLIENT_PORTAL,
+      clientId: 'seed-clinique-saint-camille',
+    },
+  });
+
   console.log('Seed complete.');
   console.log('Login: admin@sahelpharma.local / admin123!');
   console.log('Login: absalim78@yahoo.com / admin123!');
   console.log('Login: ops@sahelpharma.local / ops123!');
+  console.log('Login: supplier@mumbai-pharma.local / portal123!');
+  console.log('Login: client@saint-camille.local / portal123!');
 }
 
 main()
