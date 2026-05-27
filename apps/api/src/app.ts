@@ -30,7 +30,11 @@ export function createApp(): express.Express {
   app.use(helmet());
   app.use(
     cors({
-      origin: config.corsOrigins,
+      // In non-production, accept any origin so the API works when the web
+      // app is reached via an external host/IP (e.g. http://66.94.119.88:3000)
+      // without requiring CORS_ORIGINS to be manually edited. In production we
+      // strictly enforce the configured allowlist.
+      origin: config.isProd ? config.corsOrigins : true,
       credentials: true,
     }),
   );
