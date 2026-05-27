@@ -7,6 +7,8 @@ import { notFound, badRequest } from '../../lib/errors.js';
 import { authRequired, requireCapability } from '../../middleware/auth.js';
 import { validate } from '../../middleware/validate.js';
 import { assertSoTransition } from '../../lib/state-machines.js';
+import { AuditAction, recordAudit } from '../../lib/audit.js';
+import { streamOrderPdf } from '../../lib/pdf/order-pdf.js';
 
 const router: Router = Router();
 router.use(authRequired);
@@ -101,6 +103,13 @@ router.post(
       },
       include: { lines: true },
     });
+    await recordAudit({
+      actorId: req.auth?.sub,
+      entity: 'SalesOrder',
+      entityId: so.id,
+      action: AuditAction.CREATE,
+      after: { soNumber: so.soNumber, clientId: so.clientId, total: so.total.toString() },
+    });
     res.status(201).json(so);
   },
 );
@@ -127,6 +136,16 @@ router.patch(
     }
 
     const updated = await prisma.salesOrder.update({ where: { id }, data: updateData });
+    if (data.status && data.status !== existing.status) {
+      await recordAudit({
+        actorId: req.auth?.sub,
+        entity: 'SalesOrder',
+        entityId: id,
+        action: AuditAction.TRANSITION,
+        before: { status: existing.status },
+        after: { status: updated.status },
+      });
+    }
     res.json(updated);
   },
 );
@@ -193,6 +212,14 @@ router.post(
       where: { id },
       data: { status: 'CONFIRMED' },
     });
+    await recordAudit({
+      actorId: req.auth?.sub,
+      entity: 'SalesOrder',
+      entityId: id,
+      action: AuditAction.CONFIRM,
+      before: { status: so.status },
+      after: { status: 'CONFIRMED', locationId },
+    });
     res.json(updated);
   },
 );
@@ -230,7 +257,61 @@ router.post(
       return tx.salesOrder.update({ where: { id }, data: { status: 'DELIVERED' } });
     });
 
+    await recordAudit({
+      actorId: req.auth?.sub,
+      entity: 'SalesOrder',
+      entityId: id,
+      action: AuditAction.DELIVER,
+      before: { status: so.status },
+      after: { status: 'DELIVERED', locationId, lineCount: so.lines.length },
+    });
+
     res.json(updated);
+  },
+);
+
+// PDF rendering — proforma / delivery note.
+router.get(
+  '/:id/pdf',
+  requireCapability('salesOrders', 'read'),
+  validate(idParam, 'params'),
+  async (req, res) => {
+    const { id } = req.params as z.infer<typeof idParam>;
+    const so = await prisma.salesOrder.findUnique({
+      where: { id },
+      include: {
+        client: true,
+        lines: { include: { product: { select: { name: true, form: true, strength: true } } } },
+      },
+    });
+    if (!so) throw notFound('Sales order not found');
+    if (req.auth?.role === 'CLIENT_PORTAL' && req.auth.clientId !== so.clientId) throw notFound();
+
+    streamOrderPdf(res, {
+      documentTitle: 'Sales Order',
+      documentNumber: so.soNumber,
+      date: so.createdAt.toISOString().slice(0, 10),
+      status: so.status,
+      currency: so.currency,
+      counterpartyLabel: 'Client',
+      counterpartyName: so.client.name,
+      counterpartyDetails: [
+        [so.client.city, so.client.country].filter(Boolean).join(', '),
+        so.client.address ?? '',
+      ],
+      meta: so.deliveryDate
+        ? [{ label: 'Delivery date', value: so.deliveryDate.toISOString().slice(0, 10) }]
+        : [],
+      lines: so.lines.map((l) => ({
+        product: [l.product.name, l.product.strength, l.product.form].filter(Boolean).join(' · '),
+        qty: l.qty,
+        unitPrice: l.unitPrice.toString(),
+        lineTotal: l.lineTotal.toString(),
+      })),
+      subtotal: so.subtotal.toString(),
+      total: so.total.toString(),
+      notes: so.notes,
+    });
   },
 );
 

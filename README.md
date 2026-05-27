@@ -105,8 +105,17 @@ lifecycle and stock side-effects.
   - [x] Sales Orders (CRUD + `POST /:id/confirm` with on-hand availability check, `POST /:id/deliver` creates `SALES_DELIVERY` stock movements)
   - [x] Stock (locations CRUD, movements CRUD, aggregated `/levels` view)
   - [x] Status transitions enforced by shared state machines in `apps/api/src/lib/state-machines.ts`
-- [ ] **Phase 3 — Public site** (marketing pages incl. catalog, lead capture, FR/EN i18n)
-- [ ] **Phase 4 — Compliance & automation** (expiry-scan worker, audit log UI, PDFs)
+- [x] **Phase 3 — Public site** (marketing pages incl. catalog, lead capture, FR/EN i18n)
+  - [x] `next-intl` middleware + `[locale]` route group for EN/FR
+  - [x] Public catalog (`GET /public/products`) driving the marketing `/products` page
+  - [x] Lead capture form on `/contact` posting to rate-limited `POST /public/leads`
+  - [x] Dashboard Leads inbox (`/dashboard/leads`) with status management
+- [x] **Phase 4 — Compliance & automation** (expiry-scan worker, audit log UI, PDFs)
+  - [x] `AuditLog` helper, emitted on PO/SO/IB lifecycle events and lead submissions
+  - [x] Audit log API + dashboard view (`/dashboard/audit-logs`, ADMIN-only)
+  - [x] Document expiry-scan worker (daily + on-demand `POST /compliance/expiry-scan/run`)
+  - [x] Compliance dashboard surfacing expiry alerts (`/dashboard/compliance`)
+  - [x] PDF generation for purchase orders and sales orders via `pdfkit`
 - [ ] **Phase 5 — External portals** (Supplier / Client)
 - [ ] **Phase 6 — Hardening** (Playwright E2E, observability, runbooks)
 

@@ -7,6 +7,7 @@ import { notFound, badRequest } from '../../lib/errors.js';
 import { authRequired, requireCapability } from '../../middleware/auth.js';
 import { validate } from '../../middleware/validate.js';
 import { assertIbTransition, assertPoTransition } from '../../lib/state-machines.js';
+import { AuditAction, recordAudit } from '../../lib/audit.js';
 
 const router: Router = Router();
 router.use(authRequired);
@@ -240,6 +241,15 @@ router.post(
       }
 
       return ib;
+    });
+
+    await recordAudit({
+      actorId: req.auth?.sub,
+      entity: 'ImportBatch',
+      entityId: id,
+      action: AuditAction.RECEIVE,
+      before: { status: 'CLEARED' },
+      after: { status: updated.status, batchNumber: updated.batchNumber },
     });
 
     res.json(updated);

@@ -8,3 +8,5 @@ export * from './schemas/import-batch';
 export * from './schemas/sales-order';
 export * from './schemas/document';
 export * from './schemas/stock';
+export * from './schemas/lead';
+export * from './schemas/audit-log';

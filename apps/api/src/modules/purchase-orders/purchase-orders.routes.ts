@@ -7,6 +7,8 @@ import { notFound, badRequest } from '../../lib/errors.js';
 import { authRequired, requireCapability } from '../../middleware/auth.js';
 import { validate } from '../../middleware/validate.js';
 import { assertPoTransition } from '../../lib/state-machines.js';
+import { AuditAction, recordAudit } from '../../lib/audit.js';
+import { streamOrderPdf } from '../../lib/pdf/order-pdf.js';
 
 const router: Router = Router();
 router.use(authRequired);
@@ -103,6 +105,13 @@ router.post(
       },
       include: { lines: true },
     });
+    await recordAudit({
+      actorId: req.auth?.sub,
+      entity: 'PurchaseOrder',
+      entityId: po.id,
+      action: AuditAction.CREATE,
+      after: { poNumber: po.poNumber, supplierId: po.supplierId, total: po.total.toString() },
+    });
     res.status(201).json(po);
   },
 );
@@ -132,7 +141,62 @@ router.patch(
     }
 
     const updated = await prisma.purchaseOrder.update({ where: { id }, data: updateData });
+    if (data.status && data.status !== existing.status) {
+      await recordAudit({
+        actorId: req.auth?.sub,
+        entity: 'PurchaseOrder',
+        entityId: id,
+        action: AuditAction.TRANSITION,
+        before: { status: existing.status },
+        after: { status: updated.status },
+      });
+    }
     res.json(updated);
+  },
+);
+
+// PDF rendering — streams a pdfkit-generated order document.
+router.get(
+  '/:id/pdf',
+  requireCapability('purchaseOrders', 'read'),
+  validate(idParam, 'params'),
+  async (req, res) => {
+    const { id } = req.params as z.infer<typeof idParam>;
+    const po = await prisma.purchaseOrder.findUnique({
+      where: { id },
+      include: {
+        supplier: true,
+        lines: { include: { product: { select: { name: true, form: true, strength: true } } } },
+      },
+    });
+    if (!po) throw notFound('Purchase order not found');
+    if (req.auth?.role === 'SUPPLIER_PORTAL' && req.auth.supplierId !== po.supplierId) throw notFound();
+
+    streamOrderPdf(res, {
+      documentTitle: 'Purchase Order',
+      documentNumber: po.poNumber,
+      date: po.createdAt.toISOString().slice(0, 10),
+      status: po.status,
+      currency: po.currency,
+      counterpartyLabel: 'Supplier',
+      counterpartyName: po.supplier.name,
+      counterpartyDetails: [po.supplier.country],
+      meta: [
+        ...(po.incoterm ? [{ label: 'Incoterm', value: po.incoterm }] : []),
+        ...(po.targetShipmentDate
+          ? [{ label: 'Target shipment', value: po.targetShipmentDate.toISOString().slice(0, 10) }]
+          : []),
+      ],
+      lines: po.lines.map((l) => ({
+        product: [l.product.name, l.product.strength, l.product.form].filter(Boolean).join(' · '),
+        qty: l.qty,
+        unitPrice: l.unitPrice.toString(),
+        lineTotal: l.lineTotal.toString(),
+      })),
+      subtotal: po.subtotal.toString(),
+      total: po.total.toString(),
+      notes: po.notes,
+    });
   },
 );
 

@@ -13,4 +13,7 @@ export const RBAC: Record<string, { read: UserRole[]; write: UserRole[] }> = {
   clients: { read: ['ADMIN', 'OPS', 'SALES', 'CLIENT_PORTAL'], write: ['ADMIN', 'OPS', 'SALES'] },
   documents: { read: ['ADMIN', 'OPS', 'SALES', 'SUPPLIER_PORTAL', 'CLIENT_PORTAL'], write: ['ADMIN', 'OPS', 'SUPPLIER_PORTAL'] },
   users: { read: ['ADMIN'], write: ['ADMIN'] },
+  leads: { read: ['ADMIN', 'OPS', 'SALES'], write: ['ADMIN', 'OPS', 'SALES'] },
+  auditLogs: { read: ['ADMIN'], write: ['ADMIN'] },
+  compliance: { read: ['ADMIN', 'OPS'], write: ['ADMIN', 'OPS'] },
 };
