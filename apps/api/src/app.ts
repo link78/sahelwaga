@@ -22,6 +22,7 @@ import { publicRouter } from './modules/public/public.routes.js';
 import { leadsRouter } from './modules/leads/leads.routes.js';
 import { auditLogsRouter } from './modules/audit-logs/audit-logs.routes.js';
 import { complianceRouter } from './modules/compliance/compliance.routes.js';
+import { portalRouter } from './modules/portal/portal.routes.js';
 
 export function createApp(): express.Express {
   const app = express();
@@ -29,7 +30,11 @@ export function createApp(): express.Express {
   app.use(helmet());
   app.use(
     cors({
-      origin: config.corsOrigins,
+      // In non-production, accept any origin so the API works when the web
+      // app is reached via an external host/IP (e.g. http://66.94.119.88:3000)
+      // without requiring CORS_ORIGINS to be manually edited. In production we
+      // strictly enforce the configured allowlist.
+      origin: config.isProd ? config.corsOrigins : true,
       credentials: true,
     }),
   );
@@ -52,6 +57,7 @@ export function createApp(): express.Express {
   app.use('/leads', leadsRouter);
   app.use('/audit-logs', auditLogsRouter);
   app.use('/compliance', complianceRouter);
+  app.use('/portal', portalRouter);
 
   app.use((_req, res) => res.status(404).json({ error: 'Not Found' }));
   app.use(errorHandler);

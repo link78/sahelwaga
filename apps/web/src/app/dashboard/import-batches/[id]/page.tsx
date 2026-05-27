@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? (typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:4000` : 'http://localhost:4000');
 
 const STATUS_FLOW = ['PENDING', 'DOCS_SUBMITTED', 'AUTHORIZED', 'IN_TRANSIT', 'ARRIVED', 'CUSTOMS_CLEARANCE', 'CLEARED'];
 const STATUS_COLORS: Record<string, string> = {
@@ -91,7 +91,7 @@ export default function ImportBatchDetailPage() {
         {canAdvance && (
           <button onClick={advanceStatus} disabled={updating}
             className="rounded-md bg-brand-green-700 px-4 py-2 text-sm text-white hover:bg-brand-green-800 disabled:opacity-50">
-            {updating ? 'Updating…' : `Mark as ${STATUS_FLOW[STATUS_FLOW.indexOf(ib.status) + 1].replace(/_/g, ' ')}`}
+            {updating ? 'Updating…' : `Mark as ${(STATUS_FLOW[STATUS_FLOW.indexOf(ib.status) + 1] ?? '').replace(/_/g, ' ')}`}
           </button>
         )}
       </div>

@@ -28,9 +28,17 @@ router.get(
   validate(listQuery, 'query'),
   async (req, res) => {
     const { page, pageSize, q, type } = req.query as unknown as z.infer<typeof listQuery>;
+    // Portal users only see documents linked to their own supplier / client.
+    const portalScope: Prisma.DocumentWhereInput | undefined =
+      req.auth?.role === 'SUPPLIER_PORTAL' && req.auth.supplierId
+        ? { links: { some: { supplierId: req.auth.supplierId } } }
+        : req.auth?.role === 'CLIENT_PORTAL' && req.auth.clientId
+          ? { links: { some: { clientId: req.auth.clientId } } }
+          : undefined;
     const where: Prisma.DocumentWhereInput = {
       ...(q ? { title: { contains: q, mode: 'insensitive' } } : {}),
       ...(type ? { type: type as Prisma.EnumDocumentTypeFilter['equals'] } : {}),
+      ...(portalScope ?? {}),
     };
     const [items, total] = await Promise.all([
       prisma.document.findMany({
@@ -146,6 +154,14 @@ router.post(
       .filter(Boolean).length;
     if (fkCount !== 1) {
       throw badRequest('Exactly one entity reference must be provided');
+    }
+
+    // Portal users may only link to their own supplier/client record.
+    if (req.auth?.role === 'SUPPLIER_PORTAL' && data.supplierId !== req.auth.supplierId) {
+      throw badRequest('Supplier portal users can only link documents to their own supplier');
+    }
+    if (req.auth?.role === 'CLIENT_PORTAL' && data.clientId !== req.auth.clientId) {
+      throw badRequest('Client portal users can only link documents to their own client');
     }
 
     const link = await prisma.documentLink.create({

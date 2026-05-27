@@ -17,12 +17,7 @@ interface PurchaseOrder {
   _count: { lines: number };
 }
 
-interface Paginated<T> {
-  items: T[];
-  page: number;
-  pageSize: number;
-  total: number;
-}
+interface Paginated<T> { items: T[]; page: number; pageSize: number; total: number }
 
 const STATUS_COLORS: Record<string, string> = {
   DRAFT: 'bg-gray-100 text-gray-800',
@@ -34,17 +29,14 @@ const STATUS_COLORS: Record<string, string> = {
   CANCELLED: 'bg-red-100 text-red-800',
 };
 
-export default function PurchaseOrdersPage() {
+export default function SupplierPortalPurchaseOrdersPage() {
   const [data, setData] = useState<Paginated<PurchaseOrder> | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
 
   useEffect(() => {
     const token = window.localStorage.getItem('sahelwaga.access');
     const params = new URLSearchParams({ page: String(page), pageSize: '20' });
-    if (search) params.set('q', search);
-
     fetch(`${API_URL}/purchase-orders?${params}`, {
       headers: token ? { authorization: 'Bearer ' + token } : {},
     })
@@ -54,31 +46,16 @@ export default function PurchaseOrdersPage() {
       })
       .then(setData)
       .catch((e) => setError(e.message));
-  }, [page, search]);
+  }, [page]);
 
   const totalPages = data ? Math.ceil(data.total / data.pageSize) : 0;
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h1 className="font-serif text-3xl font-semibold">Purchase Orders</h1>
-        <Link
-          href="/dashboard/purchase-orders/new"
-          className="rounded-md bg-brand-green-700 px-4 py-2 text-white hover:bg-brand-green-800"
-        >
-          New PO
-        </Link>
-      </div>
-
-      <div className="mt-4">
-        <input
-          type="text"
-          placeholder="Search by PO number…"
-          value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-          className="w-full max-w-sm rounded-md border border-brand-neutral-200 px-3 py-2 text-sm focus:border-brand-green-500 focus:outline-none focus:ring-1 focus:ring-brand-green-500"
-        />
-      </div>
+      <h1 className="font-serif text-3xl font-semibold">Purchase Orders</h1>
+      <p className="mt-1 text-sm text-brand-neutral-500">
+        Read-only view of every PO Sahel Pharma has issued to you.
+      </p>
 
       {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
 
@@ -87,7 +64,6 @@ export default function PurchaseOrdersPage() {
           <thead className="bg-brand-neutral-50 text-left text-xs uppercase tracking-wide text-brand-neutral-500">
             <tr>
               <th className="px-4 py-3">PO #</th>
-              <th className="px-4 py-3">Supplier</th>
               <th className="px-4 py-3">Items</th>
               <th className="px-4 py-3">Total</th>
               <th className="px-4 py-3">Ship date</th>
@@ -98,11 +74,10 @@ export default function PurchaseOrdersPage() {
             {data?.items.map((po) => (
               <tr key={po.id} className="border-t border-brand-neutral-100">
                 <td className="px-4 py-3 font-medium">
-                  <Link href={`/dashboard/purchase-orders/${po.id}`} className="text-brand-green-700 hover:underline">
+                  <Link href={`/portal/supplier/purchase-orders/${po.id}`} className="text-brand-green-700 hover:underline">
                     {po.poNumber}
                   </Link>
                 </td>
-                <td className="px-4 py-3">{po.supplier.name}</td>
                 <td className="px-4 py-3">{po._count.lines}</td>
                 <td className="px-4 py-3">{po.currency} {Number(po.total).toLocaleString()}</td>
                 <td className="px-4 py-3">
@@ -116,11 +91,7 @@ export default function PurchaseOrdersPage() {
               </tr>
             ))}
             {data && data.items.length === 0 && (
-              <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-brand-neutral-500">
-                  No purchase orders yet.
-                </td>
-              </tr>
+              <tr><td colSpan={5} className="px-4 py-8 text-center text-brand-neutral-500">No purchase orders yet.</td></tr>
             )}
           </tbody>
         </table>
