@@ -109,7 +109,7 @@ export default function SalesOrderDetailPage() {
           {canAdvance && (
             <button onClick={advanceStatus} disabled={updating}
               className="rounded-md bg-brand-green-700 px-4 py-2 text-sm text-white hover:bg-brand-green-800 disabled:opacity-50">
-              {updating ? 'Updating…' : `Mark as ${STATUS_FLOW[STATUS_FLOW.indexOf(so.status) + 1]}`}
+              {updating ? 'Updating…' : `Mark as ${STATUS_FLOW[STATUS_FLOW.indexOf(so.status) + 1] ?? ''}`}
             </button>
           )}
         </div>

@@ -91,7 +91,7 @@ export default function ImportBatchDetailPage() {
         {canAdvance && (
           <button onClick={advanceStatus} disabled={updating}
             className="rounded-md bg-brand-green-700 px-4 py-2 text-sm text-white hover:bg-brand-green-800 disabled:opacity-50">
-            {updating ? 'Updating…' : `Mark as ${STATUS_FLOW[STATUS_FLOW.indexOf(ib.status) + 1].replace(/_/g, ' ')}`}
+            {updating ? 'Updating…' : `Mark as ${(STATUS_FLOW[STATUS_FLOW.indexOf(ib.status) + 1] ?? '').replace(/_/g, ' ')}`}
           </button>
         )}
       </div>
