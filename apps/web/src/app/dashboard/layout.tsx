@@ -14,6 +14,9 @@ const nav = [
   { href: '/dashboard/sales-orders', label: 'Sales Orders' },
   { href: '/dashboard/documents', label: 'Documents' },
   { href: '/dashboard/stock', label: 'Stock' },
+  { href: '/dashboard/leads', label: 'Leads' },
+  { href: '/dashboard/compliance', label: 'Compliance' },
+  { href: '/dashboard/audit-logs', label: 'Audit log' },
 ];
 
 interface SessionUser {

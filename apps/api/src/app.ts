@@ -18,6 +18,10 @@ import { importBatchesRouter } from './modules/import-batches/import-batches.rou
 import { salesOrdersRouter } from './modules/sales-orders/sales-orders.routes.js';
 import { documentsRouter } from './modules/documents/documents.routes.js';
 import { stockRouter } from './modules/stock/stock.routes.js';
+import { publicRouter } from './modules/public/public.routes.js';
+import { leadsRouter } from './modules/leads/leads.routes.js';
+import { auditLogsRouter } from './modules/audit-logs/audit-logs.routes.js';
+import { complianceRouter } from './modules/compliance/compliance.routes.js';
 
 export function createApp(): express.Express {
   const app = express();
@@ -44,6 +48,10 @@ export function createApp(): express.Express {
   app.use('/sales-orders', salesOrdersRouter);
   app.use('/documents', documentsRouter);
   app.use('/stock', stockRouter);
+  app.use('/public', publicRouter);
+  app.use('/leads', leadsRouter);
+  app.use('/audit-logs', auditLogsRouter);
+  app.use('/compliance', complianceRouter);
 
   app.use((_req, res) => res.status(404).json({ error: 'Not Found' }));
   app.use(errorHandler);

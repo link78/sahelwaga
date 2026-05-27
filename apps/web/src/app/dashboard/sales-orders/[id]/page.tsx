@@ -88,12 +88,31 @@ export default function SalesOrderDetailPage() {
           <Link href="/dashboard/sales-orders" className="text-sm text-brand-green-700 hover:underline">← Sales Orders</Link>
           <h1 className="mt-1 font-serif text-3xl font-semibold">{so.soNumber}</h1>
         </div>
-        {canAdvance && (
-          <button onClick={advanceStatus} disabled={updating}
-            className="rounded-md bg-brand-green-700 px-4 py-2 text-sm text-white hover:bg-brand-green-800 disabled:opacity-50">
-            {updating ? 'Updating…' : `Mark as ${STATUS_FLOW[STATUS_FLOW.indexOf(so.status) + 1]}`}
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={async () => {
+              const token = window.localStorage.getItem('sahelwaga.access');
+              const res = await fetch(`${API_URL}/sales-orders/${so.id}/pdf`, {
+                headers: token ? { authorization: 'Bearer ' + token } : {},
+              });
+              if (!res.ok) return;
+              const blob = await res.blob();
+              const url = URL.createObjectURL(blob);
+              window.open(url, '_blank');
+              setTimeout(() => URL.revokeObjectURL(url), 30_000);
+            }}
+            className="rounded-md border border-brand-neutral-100 px-4 py-2 text-sm hover:bg-brand-neutral-50"
+          >
+            Download PDF
           </button>
-        )}
+          {canAdvance && (
+            <button onClick={advanceStatus} disabled={updating}
+              className="rounded-md bg-brand-green-700 px-4 py-2 text-sm text-white hover:bg-brand-green-800 disabled:opacity-50">
+              {updating ? 'Updating…' : `Mark as ${STATUS_FLOW[STATUS_FLOW.indexOf(so.status) + 1]}`}
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">

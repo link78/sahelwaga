@@ -109,6 +109,23 @@ export default function PurchaseOrderDetailPage() {
           <h1 className="mt-1 font-serif text-3xl font-semibold">{po.poNumber}</h1>
         </div>
         <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={async () => {
+              const token = window.localStorage.getItem('sahelwaga.access');
+              const res = await fetch(`${API_URL}/purchase-orders/${po.id}/pdf`, {
+                headers: token ? { authorization: 'Bearer ' + token } : {},
+              });
+              if (!res.ok) return;
+              const blob = await res.blob();
+              const url = URL.createObjectURL(blob);
+              window.open(url, '_blank');
+              setTimeout(() => URL.revokeObjectURL(url), 30_000);
+            }}
+            className="rounded-md border border-brand-neutral-100 px-4 py-2 text-sm hover:bg-brand-neutral-50"
+          >
+            Download PDF
+          </button>
           {canAdvance && (
             <button onClick={advanceStatus} disabled={updating}
               className="rounded-md bg-brand-green-700 px-4 py-2 text-sm text-white hover:bg-brand-green-800 disabled:opacity-50">
