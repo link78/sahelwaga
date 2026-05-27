@@ -6,6 +6,7 @@ import { prisma } from '../../lib/prisma.js';
 import { notFound, badRequest } from '../../lib/errors.js';
 import { authRequired, requireCapability } from '../../middleware/auth.js';
 import { validate } from '../../middleware/validate.js';
+import { assertPoTransition } from '../../lib/state-machines.js';
 
 const router: Router = Router();
 router.use(authRequired);
@@ -125,7 +126,10 @@ router.patch(
       updateData.targetShipmentDate = data.targetShipmentDate ? new Date(data.targetShipmentDate) : null;
     }
     if (data.notes !== undefined) updateData.notes = data.notes ?? null;
-    if (data.status) updateData.status = data.status;
+    if (data.status) {
+      assertPoTransition(existing.status, data.status);
+      updateData.status = data.status;
+    }
 
     const updated = await prisma.purchaseOrder.update({ where: { id }, data: updateData });
     res.json(updated);
