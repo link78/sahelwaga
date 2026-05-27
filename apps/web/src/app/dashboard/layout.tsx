@@ -12,6 +12,8 @@ const nav = [
   { href: '/dashboard/purchase-orders', label: 'Purchase Orders' },
   { href: '/dashboard/import-batches', label: 'Import Batches' },
   { href: '/dashboard/sales-orders', label: 'Sales Orders' },
+  { href: '/dashboard/documents', label: 'Documents' },
+  { href: '/dashboard/stock', label: 'Stock' },
 ];
 
 interface SessionUser {

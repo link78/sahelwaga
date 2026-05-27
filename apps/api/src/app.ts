@@ -16,6 +16,8 @@ import { dashboardRouter } from './modules/dashboard/dashboard.routes.js';
 import { purchaseOrdersRouter } from './modules/purchase-orders/purchase-orders.routes.js';
 import { importBatchesRouter } from './modules/import-batches/import-batches.routes.js';
 import { salesOrdersRouter } from './modules/sales-orders/sales-orders.routes.js';
+import { documentsRouter } from './modules/documents/documents.routes.js';
+import { stockRouter } from './modules/stock/stock.routes.js';
 
 export function createApp(): express.Express {
   const app = express();
@@ -40,6 +42,8 @@ export function createApp(): express.Express {
   app.use('/purchase-orders', purchaseOrdersRouter);
   app.use('/import-batches', importBatchesRouter);
   app.use('/sales-orders', salesOrdersRouter);
+  app.use('/documents', documentsRouter);
+  app.use('/stock', stockRouter);
 
   app.use((_req, res) => res.status(404).json({ error: 'Not Found' }));
   app.use(errorHandler);
