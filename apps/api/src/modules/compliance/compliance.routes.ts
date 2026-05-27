@@ -10,7 +10,7 @@ router.use(authRequired);
 // Trigger an on-demand expiry scan (admin/ops). Idempotent — alerts are
 // deduped inside the scanner.
 router.post('/expiry-scan/run', requireCapability('compliance', 'write'), async (_req, res) => {
-  const result = await runExpiryScan();
+  const result = await runExpiryScan({ trigger: 'manual' });
   res.json(result);
 });
 

@@ -1,6 +1,7 @@
 import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
 import { AuditAction, recordAudit } from '../lib/audit.js';
+import { expiryScanRunsTotal } from '../lib/metrics.js';
 
 // Documents whose expiry matters for compliance reporting.
 const TRACKED_DOC_TYPES = ['COA', 'STABILITY', 'IMPORT_PERMIT', 'WHO_GMP', 'LICENSE'] as const;
@@ -23,8 +24,11 @@ export interface ExpiryScanResult {
  * To avoid duplicate alerts the scanner skips documents that already have an
  * EXPIRY_ALERT entry in the past `windowDays`.
  */
-export async function runExpiryScan(opts: { windowDays?: number } = {}): Promise<ExpiryScanResult> {
+export async function runExpiryScan(
+  opts: { windowDays?: number; trigger?: 'scheduled' | 'manual' } = {},
+): Promise<ExpiryScanResult> {
   const windowDays = opts.windowDays ?? ALERT_WINDOW_DAYS;
+  const trigger = opts.trigger ?? 'scheduled';
   const now = new Date();
   const horizon = new Date(now.getTime() + windowDays * 24 * 60 * 60 * 1000);
   const dedupeSince = new Date(now.getTime() - windowDays * 24 * 60 * 60 * 1000);
@@ -81,6 +85,7 @@ export async function runExpiryScan(opts: { windowDays?: number } = {}): Promise
     expiringCount,
   };
   logger.info(result, 'expiry-scan completed');
+  expiryScanRunsTotal.inc({ trigger });
   return result;
 }
 

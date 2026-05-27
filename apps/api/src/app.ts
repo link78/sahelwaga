@@ -7,6 +7,8 @@ import { config } from './config/env.js';
 import { logger } from './lib/logger.js';
 import { errorHandler } from './middleware/error-handler.js';
 import { authLimiter, globalLimiter } from './middleware/rate-limit.js';
+import { requestId } from './middleware/request-id.js';
+import { metricsMiddleware } from './middleware/metrics.js';
 import { authRouter } from './modules/auth/auth.routes.js';
 import { suppliersRouter } from './modules/suppliers/suppliers.routes.js';
 import { productsRouter } from './modules/products/products.routes.js';
@@ -39,7 +41,18 @@ export function createApp(): express.Express {
     }),
   );
   app.use(express.json({ limit: '1mb' }));
-  app.use(pinoHttp({ logger }));
+  app.use(requestId);
+  app.use(
+    pinoHttp({
+      logger,
+      customProps: (req) => ({
+        requestId: (req as express.Request).requestId,
+        userId: (req as express.Request).auth?.sub,
+        role: (req as express.Request).auth?.role,
+      }),
+    }),
+  );
+  app.use(metricsMiddleware);
   app.use(globalLimiter);
 
   app.use('/health', healthRouter);

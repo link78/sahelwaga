@@ -124,7 +124,13 @@ lifecycle and stock side-effects.
   - [x] Web `/portal/supplier` (overview, PO list/detail with PDF, documents) and `/portal/client` (overview, SO list/detail with PDF, catalog, documents) with role-gated layout
   - [x] Login redirect: SUPPLIER_PORTAL/CLIENT_PORTAL routed into their portal; `/dashboard` redirects portal users out
   - [x] Seeded demo portal users (`supplier@mumbai-pharma.local`, `client@saint-camille.local`)
-- [ ] **Phase 6 — Hardening** (Playwright E2E, observability, runbooks)
+- [x] **Phase 6 — Hardening** (Playwright E2E, observability, runbooks)
+  - [x] Request-ID middleware (echoes `x-request-id`, threaded into logs + error responses)
+  - [x] Health endpoints: `/health`, `/health/live`, `/health/ready`, Prometheus-format `/health/metrics`
+  - [x] In-process metrics for HTTP traffic, audit writes and the expiry-scan worker
+  - [x] Playwright E2E workspace (`apps/e2e`) covering marketing site (EN/FR), admin login, public catalog, contact form and health endpoints
+  - [x] `e2e.yml` GitHub Actions workflow (Postgres service + migrate/seed + API/web boot + Playwright)
+  - [x] Operational runbooks under `docs/runbooks/` (incident response, deploy/rollback, backup/restore, expiry-scan, observability, on-call)
 
 Extension points are marked with `Phase N+` comments throughout the code
 (e.g. router mount points in `apps/api/src/app.ts`, navigation items in
@@ -175,6 +181,26 @@ The Suppliers module is the canonical example. To add e.g. Products:
    nav entry in `dashboard/layout.tsx`.
 
 ---
+
+## Operations
+
+- Operational runbooks live in [`docs/runbooks/`](./docs/runbooks/README.md).
+- API observability surfaces at `/health`, `/health/live`, `/health/ready`
+  and `/health/metrics` (Prometheus text format). Every request gets an
+  `x-request-id` header (auto-generated when missing) which is echoed on the
+  response and included in structured logs + error payloads.
+
+## End-to-end tests
+
+Playwright smoke tests live in [`apps/e2e`](./apps/e2e/README.md):
+
+```bash
+pnpm e2e:install   # one-time: download Chromium
+pnpm dev           # in another terminal
+pnpm e2e           # run Playwright against localhost:3000 / :4000
+```
+
+CI runs the same suite via [`.github/workflows/e2e.yml`](./.github/workflows/e2e.yml).
 
 ## License
 
