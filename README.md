@@ -83,9 +83,8 @@ Demo credentials (after `db:seed`):
 
 ## Build plan status
 
-The full plan is six phases. This repository currently implements **Phase 0**
-and a representative slice of **Phase 1** (Suppliers CRUD as the template for
-remaining modules).
+The full plan is six phases. Phases 0–1 are complete; Phase 2 covers the order
+lifecycle and stock side-effects.
 
 - [x] **Phase 0 — Foundations**
   - [x] Monorepo (pnpm workspaces, TS, ESLint/Prettier)
@@ -94,8 +93,18 @@ remaining modules).
   - [x] Express API: env validation, logging, error handler, JWT auth, RBAC middleware
   - [x] Next.js: marketing home, login, role-aware dashboard shell
   - [x] CI workflow
-- [ ] **Phase 1 — Core back office** (Suppliers ✅ template, Products / Documents / Clients / Dashboard KPIs)
-- [ ] **Phase 2 — Order lifecycle** (POs, Import Batches, Sales Orders, Stock)
+- [x] **Phase 1 — Core back office**
+  - [x] Suppliers (CRUD + soft-delete, used as the module template)
+  - [x] Products (CRUD + soft-delete)
+  - [x] Clients (CRUD + soft-delete)
+  - [x] Documents (CRUD + polymorphic `DocumentLink` to supplier/product/client/PO/IB/SO)
+  - [x] Dashboard KPIs (`/dashboard/stats`: active suppliers/products, open POs/SOs, in-transit shipments, expiring COA/STABILITY, low stock)
+- [x] **Phase 2 — Order lifecycle**
+  - [x] Purchase Orders (CRUD + status guard via state machine on `PATCH`)
+  - [x] Import Batches (CRUD + `POST /:id/receive` → sets `qtyReceived`, creates `IMPORT_RECEIPT` stock movements, cascades parent PO → `RECEIVED`)
+  - [x] Sales Orders (CRUD + `POST /:id/confirm` with on-hand availability check, `POST /:id/deliver` creates `SALES_DELIVERY` stock movements)
+  - [x] Stock (locations CRUD, movements CRUD, aggregated `/levels` view)
+  - [x] Status transitions enforced by shared state machines in `apps/api/src/lib/state-machines.ts`
 - [ ] **Phase 3 — Public site** (marketing pages incl. catalog, lead capture, FR/EN i18n)
 - [ ] **Phase 4 — Compliance & automation** (expiry-scan worker, audit log UI, PDFs)
 - [ ] **Phase 5 — External portals** (Supplier / Client)
