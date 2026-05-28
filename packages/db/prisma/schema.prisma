@@ -55,9 +55,32 @@ model User {
 
   uploadedDocuments Document[] @relation("UploadedBy")
   auditLogs         AuditLog[] @relation("Actor")
+  refreshTokens     RefreshToken[]
 
   @@index([supplierId])
   @@index([clientId])
+}
+
+// Server-side record of issued refresh tokens. We store only a SHA-256 hash of
+// the token (`tokenHash`) — verification compares the hash, never the raw value.
+// Every successful refresh revokes the previous token and issues a new one
+// linked via `replacedById`, enabling reuse detection: if a revoked token is
+// presented again, the entire session family (descendants) is revoked, which
+// kills any clone an attacker may have stolen.
+model RefreshToken {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash    String    @unique
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  replacedById String?
+  createdByIp  String?
+  userAgent    String?
+  createdAt    DateTime  @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model AuditLog {

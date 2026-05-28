@@ -1,6 +1,7 @@
 import 'express-async-errors';
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import pinoHttp from 'pino-http';
 import { config } from './config/env.js';
@@ -9,6 +10,7 @@ import { errorHandler } from './middleware/error-handler.js';
 import { authLimiter, globalLimiter } from './middleware/rate-limit.js';
 import { requestId } from './middleware/request-id.js';
 import { metricsMiddleware } from './middleware/metrics.js';
+import { csrfProtection } from './middleware/cookies.js';
 import { authRouter } from './modules/auth/auth.routes.js';
 import { suppliersRouter } from './modules/suppliers/suppliers.routes.js';
 import { productsRouter } from './modules/products/products.routes.js';
@@ -41,6 +43,7 @@ export function createApp(): express.Express {
     }),
   );
   app.use(express.json({ limit: '1mb' }));
+  app.use(cookieParser());
   app.use(requestId);
   app.use(
     pinoHttp({
@@ -54,6 +57,14 @@ export function createApp(): express.Express {
   );
   app.use(metricsMiddleware);
   app.use(globalLimiter);
+  // CSRF protection: only enforces on cookie-authenticated mutating requests.
+  // Auth routes (login/refresh/logout) are intentionally exempt — login can't
+  // have a CSRF cookie yet, refresh/logout accept body fallback, and they
+  // already sit behind the strict `authLimiter`.
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/auth/')) return next();
+    return csrfProtection(req, res, next);
+  });
 
   app.use('/health', healthRouter);
   app.use('/auth', authLimiter, authRouter);

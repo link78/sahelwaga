@@ -18,6 +18,15 @@ const envSchema = z.object({
   JWT_REFRESH_SECRET: z.string().min(16),
   JWT_ACCESS_TTL: z.string().default('15m'),
   JWT_REFRESH_TTL: z.string().default('7d'),
+  // Auth cookie / CSRF configuration.
+  // When AUTH_COOKIE_SECURE is true (recommended in prod, behind HTTPS) the
+  // browser only sends auth cookies over TLS. Set AUTH_COOKIE_DOMAIN when the
+  // API and web app are served from different subdomains of the same root
+  // (e.g. api.sahelwaga.com / app.sahelwaga.com) and you want the cookie to
+  // be sent to both.
+  AUTH_COOKIE_SECURE: z.coerce.boolean().default(false),
+  AUTH_COOKIE_DOMAIN: z.string().optional(),
+  AUTH_COOKIE_SAMESITE: z.enum(['lax', 'strict', 'none']).default('lax'),
 });
 
 const parsed = envSchema.safeParse(process.env);

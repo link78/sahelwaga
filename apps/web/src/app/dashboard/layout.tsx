@@ -51,9 +51,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [router]);
 
   function signOut() {
-    window.localStorage.removeItem('sahelwaga.access');
-    window.localStorage.removeItem('sahelwaga.refresh');
-    window.localStorage.removeItem('sahelwaga.user');
+    void import('../../lib/api').then(({ signOut: doSignOut }) => doSignOut());
     router.replace('/login');
   }
 

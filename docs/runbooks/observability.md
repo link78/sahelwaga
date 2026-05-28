@@ -74,6 +74,26 @@ totals from your time-series store.
 
 ## Tracing
 
-Distributed tracing is not in scope for Phase 6. The `x-request-id` header
-is the correlation primitive — propagate it from upstream (web → API) and
-log it on every span you add later.
+Distributed tracing is not yet wired up. The `x-request-id` header is the
+correlation primitive — propagate it from upstream (web → API) and log it on
+every span you add later.
+
+Recommended next step: bootstrap `@opentelemetry/sdk-node` in
+`apps/api/src/server.ts` with the OTLP HTTP exporter and the auto-instrumentations
+for Express, HTTP, and Prisma. Export to a local collector in dev (Jaeger or
+Tempo) and to your APM of choice in prod via `OTEL_EXPORTER_OTLP_ENDPOINT`.
+Keep `x-request-id` mapped onto the span baggage so existing log↔trace
+correlation continues to work.
+
+## Auth & session metrics
+
+The auth subsystem exposes the following counters (see `/health/metrics`):
+
+- `auth_login_total{outcome=success|invalid|inactive}` — login attempts.
+- `auth_refresh_total{outcome=success|invalid|reused|expired|revoked}` —
+  refresh rotations. A non-zero `reused` count means a refresh token was
+  presented after revocation; the entire session family is auto-revoked.
+- `auth_refresh_reuse_total` — convenience counter for alerting on token
+  theft (`rate(auth_refresh_reuse_total[15m]) > 0`).
+- `csrf_blocked_total{route}` — requests blocked by CSRF middleware.
+- `expiry_scan_failures_total{trigger}` — scans that exhausted all retries.

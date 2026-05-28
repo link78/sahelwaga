@@ -85,8 +85,7 @@ Demo credentials (after `db:seed`):
 
 ## Build plan status
 
-The full plan is six phases. Phases 0–1 are complete; Phase 2 covers the order
-lifecycle and stock side-effects.
+The full plan spans seven phases (Phase 0–6); all are complete.
 
 - [x] **Phase 0 — Foundations**
   - [x] Monorepo (pnpm workspaces, TS, ESLint/Prettier)

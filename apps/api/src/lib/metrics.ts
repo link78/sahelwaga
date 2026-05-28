@@ -126,6 +126,26 @@ export const expiryScanRunsTotal = counter(
   'expiry_scan_runs_total',
   'Document expiry scans executed, labelled by trigger (scheduled|manual).',
 );
+export const expiryScanFailuresTotal = counter(
+  'expiry_scan_failures_total',
+  'Document expiry scan attempts that ended in error after all retries.',
+);
+export const authLoginTotal = counter(
+  'auth_login_total',
+  'Login attempts, labelled by outcome (success|invalid|inactive).',
+);
+export const authRefreshTotal = counter(
+  'auth_refresh_total',
+  'Refresh-token attempts, labelled by outcome (success|invalid|reused|expired|revoked).',
+);
+export const authRefreshReuseTotal = counter(
+  'auth_refresh_reuse_total',
+  'Refresh-token reuse incidents detected (session family revoked).',
+);
+export const csrfBlockedTotal = counter(
+  'csrf_blocked_total',
+  'Requests blocked by CSRF middleware.',
+);
 export const processStartTime = gauge(
   'process_start_time_seconds',
   'UNIX epoch (seconds) at which the API process started.',

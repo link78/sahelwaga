@@ -4,6 +4,7 @@ import { config } from '../config/env.js';
 import { forbidden, unauthorized } from '../lib/errors.js';
 import type { UserRole } from '@sahelwaga/shared';
 import { RBAC } from '@sahelwaga/shared';
+import { ACCESS_COOKIE } from './cookies.js';
 
 export interface AuthPayload {
   sub: string;
@@ -22,12 +23,22 @@ declare global {
   }
 }
 
-export function authRequired(req: Request, _res: Response, next: NextFunction): void {
+function extractAccessToken(req: Request): string | null {
   const header = req.headers.authorization;
-  if (!header?.startsWith('Bearer ')) {
+  if (header?.startsWith('Bearer ')) {
+    return header.slice('Bearer '.length);
+  }
+  const cookieJar = (req as Request & { cookies?: Record<string, string> }).cookies;
+  const cookieToken = cookieJar?.[ACCESS_COOKIE];
+  if (cookieToken) return cookieToken;
+  return null;
+}
+
+export function authRequired(req: Request, _res: Response, next: NextFunction): void {
+  const token = extractAccessToken(req);
+  if (!token) {
     throw unauthorized('Missing bearer token');
   }
-  const token = header.slice('Bearer '.length);
   try {
     const decoded = jwt.verify(token, config.JWT_ACCESS_SECRET) as AuthPayload;
     req.auth = decoded;

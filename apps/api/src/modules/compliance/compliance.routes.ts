@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authRequired, requireCapability } from '../../middleware/auth.js';
 import { prisma } from '../../lib/prisma.js';
-import { runExpiryScan } from '../../workers/expiry-scan.js';
+import { getExpiryScanStatus, runExpiryScan } from '../../workers/expiry-scan.js';
 import { AuditAction } from '../../lib/audit.js';
 
 const router: Router = Router();
@@ -12,6 +12,11 @@ router.use(authRequired);
 router.post('/expiry-scan/run', requireCapability('compliance', 'write'), async (_req, res) => {
   const result = await runExpiryScan({ trigger: 'manual' });
   res.json(result);
+});
+
+// Health/status of the expiry-scan worker for ops dashboards.
+router.get('/expiry-scan/status', requireCapability('compliance', 'read'), (_req, res) => {
+  res.json(getExpiryScanStatus());
 });
 
 // Surface the most recent EXPIRY_ALERT entries with their parent documents.
