@@ -2,13 +2,17 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { API_BASE_URL, persistSession } from '../../lib/api';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? (typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:4000` : 'http://localhost:4000');
+// Prefilling demo credentials is helpful in development but leaks them in
+// production. We use the deployment build mode rather than runtime env so the
+// fields are *guaranteed* empty in production bundles.
+const SHOW_DEMO_CREDENTIALS = process.env.NODE_ENV !== 'production';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('admin@sahelpharma.local');
-  const [password, setPassword] = useState('admin123!');
+  const [email, setEmail] = useState(SHOW_DEMO_CREDENTIALS ? 'admin@sahelpharma.local' : '');
+  const [password, setPassword] = useState(SHOW_DEMO_CREDENTIALS ? 'admin123!' : '');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -17,8 +21,11 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_URL}/auth/login`, {
+      const res = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
+        // `credentials: include` lets the browser persist the HttpOnly refresh
+        // cookie the API sets in the Set-Cookie response header.
+        credentials: 'include',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
@@ -27,12 +34,11 @@ export default function LoginPage() {
         throw new Error(body.error ?? 'Login failed');
       }
       const data = await res.json();
-      // Phase 0: store tokens client-side. Phase 1+ moves this to httpOnly cookies via NextAuth.
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem('sahelwaga.access', data.access);
-        window.localStorage.setItem('sahelwaga.refresh', data.refresh);
-        window.localStorage.setItem('sahelwaga.user', JSON.stringify(data.user));
-      }
+      // Only the short-lived (15m) access token + public profile are kept in
+      // browser storage. The refresh token now lives in the HttpOnly
+      // `sahel_refresh` cookie set by the API and is therefore not reachable
+      // from JavaScript (mitigates XSS-driven session theft).
+      persistSession({ access: data.access, user: data.user });
       // Phase 5: route portal users into their dedicated portal experience.
       if (data.user?.role === 'SUPPLIER_PORTAL') router.push('/portal/supplier');
       else if (data.user?.role === 'CLIENT_PORTAL') router.push('/portal/client');

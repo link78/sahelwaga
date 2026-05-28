@@ -11,13 +11,13 @@ export function errorHandler(
   _next: NextFunction,
 ) {
   if (err instanceof ZodError) {
-    res.status(400).json({ error: 'ValidationError', issues: err.flatten() });
+    res.status(400).json({ error: 'ValidationError', issues: err.flatten(), requestId: _req.requestId });
     return;
   }
   if (err instanceof HttpError) {
-    res.status(err.statusCode).json({ error: err.message, details: err.details });
+    res.status(err.statusCode).json({ error: err.message, details: err.details, requestId: _req.requestId });
     return;
   }
-  logger.error({ err }, 'Unhandled error');
-  res.status(500).json({ error: 'InternalServerError' });
+  logger.error({ err, requestId: _req.requestId }, 'Unhandled error');
+  res.status(500).json({ error: 'InternalServerError', requestId: _req.requestId });
 }

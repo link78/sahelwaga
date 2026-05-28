@@ -1,5 +1,6 @@
 import { prisma } from './prisma.js';
 import { logger } from './logger.js';
+import { auditEntriesTotal, auditWriteFailuresTotal } from './metrics.js';
 
 /** Diffable JSON value supplied to the audit log helpers. */
 export type AuditJson = Record<string, unknown> | null | undefined;
@@ -31,7 +32,9 @@ export async function recordAudit(opts: RecordAuditOptions): Promise<void> {
         afterJson: (opts.after ?? null) as never,
       },
     });
+    auditEntriesTotal.inc({ entity: opts.entity, action: opts.action });
   } catch (err) {
+    auditWriteFailuresTotal.inc({ entity: opts.entity, action: opts.action });
     logger.warn({ err, audit: opts }, 'failed to write audit log entry');
   }
 }

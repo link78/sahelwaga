@@ -1,0 +1,112 @@
+name: E2E
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  playwright:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: sahel
+          POSTGRES_PASSWORD: sahel
+          POSTGRES_DB: sahelwaga
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sahel -d sahelwaga"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://sahel:sahel@localhost:5432/sahelwaga?schema=public
+      API_HOST: 127.0.0.1
+      API_PORT: 4000
+      LOG_LEVEL: warn
+      CORS_ORIGINS: http://localhost:3000
+      JWT_ACCESS_SECRET: e2e-access-secret-min-32-chars-aaaaaaaaaa
+      JWT_REFRESH_SECRET: e2e-refresh-secret-min-32-chars-bbbbbbbbbb
+      JWT_ACCESS_TTL: 15m
+      JWT_REFRESH_TTL: 7d
+      NEXT_PUBLIC_API_URL: http://localhost:4000
+      E2E_WEB_URL: http://localhost:3000
+      E2E_API_URL: http://localhost:4000
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile=false
+
+      - name: Generate Prisma client
+        run: pnpm db:generate
+
+      - name: Migrate database
+        run: pnpm db:migrate
+
+      - name: Seed database
+        run: pnpm db:seed
+
+      - name: Build web
+        run: pnpm --filter @sahelwaga/web build
+
+      - name: Build API
+        run: pnpm --filter @sahelwaga/api build
+
+      - name: Install Playwright browsers
+        run: pnpm --filter @sahelwaga/e2e exec playwright install --with-deps chromium
+
+      - name: Start API
+        run: |
+          pnpm --filter @sahelwaga/api start &
+          echo $! > /tmp/api.pid
+        env:
+          NODE_ENV: production
+
+      - name: Start web
+        run: |
+          pnpm --filter @sahelwaga/web start &
+          echo $! > /tmp/web.pid
+        env:
+          NODE_ENV: production
+
+      - name: Wait for services
+        run: |
+          npx --yes wait-on -t 120000 http://localhost:4000/health/live http://localhost:3000
+
+      - name: Run Playwright tests
+        run: pnpm --filter @sahelwaga/e2e run e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/e2e/playwright-report
+          retention-days: 7
+
+      - name: Stop background services
+        if: always()
+        run: |
+          [ -f /tmp/api.pid ] && kill "$(cat /tmp/api.pid)" || true
+          [ -f /tmp/web.pid ] && kill "$(cat /tmp/web.pid)" || true

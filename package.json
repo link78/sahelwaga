@@ -10,6 +10,8 @@
     "lint": "pnpm -r run lint",
     "typecheck": "pnpm -r run typecheck",
     "test": "pnpm -r run test",
+    "e2e": "pnpm --filter @sahelwaga/e2e exec playwright test",
+    "e2e:install": "pnpm --filter @sahelwaga/e2e exec playwright install --with-deps chromium",
     "db:generate": "pnpm --filter @sahelwaga/db run generate",
     "db:migrate": "pnpm --filter @sahelwaga/db run migrate",
     "db:seed": "pnpm --filter @sahelwaga/db run seed",
