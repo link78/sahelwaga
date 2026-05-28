@@ -61,6 +61,7 @@ function safeEqual(a: string, b: string): boolean {
 }
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+const CSRF_EXEMPT_PATHS = new Set<string>(['/auth/login']);
 
 /**
  * CSRF protection for cookie-authenticated mutating requests (double-submit
@@ -72,11 +73,15 @@ const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
  *   to cross-site requests — so they are exempt.
  * - Requests that present an auth cookie MUST also send a matching
  *   `X-CSRF-Token` header equal to the `sahel_csrf` cookie value.
+ * - `POST /auth/login` is the single exempt path: it cannot present a CSRF
+ *   token (no session yet) and a CSRF attack against an *unauthenticated*
+ *   login endpoint cannot escalate privileges.
  *
  * Note: must be installed AFTER `cookieParser()` and BEFORE protected routes.
  */
 export function csrfProtection(req: Request, _res: Response, next: () => void): void {
   if (SAFE_METHODS.has(req.method)) return next();
+  if (CSRF_EXEMPT_PATHS.has(req.path)) return next();
 
   const hasAuthHeader = typeof req.headers.authorization === 'string' &&
     req.headers.authorization.startsWith('Bearer ');

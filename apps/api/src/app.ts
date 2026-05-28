@@ -57,14 +57,12 @@ export function createApp(): express.Express {
   );
   app.use(metricsMiddleware);
   app.use(globalLimiter);
-  // CSRF protection: only enforces on cookie-authenticated mutating requests.
-  // Auth routes (login/refresh/logout) are intentionally exempt — login can't
-  // have a CSRF cookie yet, refresh/logout accept body fallback, and they
-  // already sit behind the strict `authLimiter`.
-  app.use((req, res, next) => {
-    if (req.path.startsWith('/auth/')) return next();
-    return csrfProtection(req, res, next);
-  });
+  // CSRF protection for cookie-authenticated mutating requests. The middleware
+  // internally exempts `/auth/login` (no prior session/CSRF cookie can exist)
+  // and Bearer-authenticated requests (not vulnerable to CSRF). All other
+  // mutating requests that present an auth cookie must carry a matching
+  // X-CSRF-Token header.
+  app.use(csrfProtection);
 
   app.use('/health', healthRouter);
   app.use('/auth', authLimiter, authRouter);
