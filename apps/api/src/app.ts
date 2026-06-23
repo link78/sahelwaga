@@ -31,6 +31,14 @@ import { portalRouter } from './modules/portal/portal.routes.js';
 export function createApp(): express.Express {
   const app = express();
 
+  // Honour `X-Forwarded-*` headers when running behind a reverse proxy
+  // (nginx, Caddy, Cloudflare, load balancer). Without this Express keeps
+  // `req.ip` as the proxy address and express-rate-limit refuses to start
+  // with ERR_ERL_UNEXPECTED_X_FORWARDED_FOR. Configured via the
+  // TRUST_PROXY env var; defaults to false to avoid IP spoofing when no
+  // proxy is present.
+  app.set('trust proxy', config.trustProxy);
+
   app.use(helmet());
   app.use(
     cors({
