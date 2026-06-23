@@ -68,7 +68,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       <aside className="w-60 border-r border-brand-neutral-100 bg-white">
         <div className="border-b border-brand-neutral-100 px-5 py-5">
           <Link href="/" className="font-serif text-lg font-semibold text-brand-green-700">
-            Sahel Pharma
+            MedSupply
           </Link>
           <div className="mt-1 text-xs uppercase tracking-wide text-brand-neutral-500">{scopeLabel}</div>
         </div>

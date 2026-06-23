@@ -9,7 +9,7 @@ export function generateStaticParams() {
 }
 
 export const metadata: Metadata = {
-  title: 'Sahel Pharma Group',
+  title: 'MedSupply Import & Distribution LLC',
   description:
     'Reliable pharmaceutical supply for the Sahel region — WHO-GMP sourced antibiotics, antimalarials, IV fluids and consumables.',
 };

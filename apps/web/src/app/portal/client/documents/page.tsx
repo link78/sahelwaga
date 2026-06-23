@@ -28,7 +28,7 @@ export default function ClientPortalDocumentsPage() {
     <div>
       <h1 className="font-serif text-3xl font-semibold">Documents</h1>
       <p className="mt-1 text-sm text-brand-neutral-500">
-        Invoices, packing lists and other documents Sahel Pharma has shared with you.
+        Invoices, packing lists and other documents MedSupply has shared with you.
       </p>
 
       {error && <p className="mt-4 text-sm text-red-600">{error}</p>}

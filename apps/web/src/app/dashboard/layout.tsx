@@ -62,7 +62,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <aside className="w-60 border-r border-brand-neutral-100 bg-white">
         <div className="border-b border-brand-neutral-100 px-5 py-5">
           <Link href="/" className="font-serif text-lg font-semibold text-brand-green-700">
-            Sahel Pharma
+            MedSupply
           </Link>
         </div>
         <nav className="px-3 py-4">

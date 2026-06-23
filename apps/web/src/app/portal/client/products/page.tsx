@@ -41,7 +41,7 @@ export default function ClientPortalCatalogPage() {
     <div>
       <h1 className="font-serif text-3xl font-semibold">Catalog</h1>
       <p className="mt-1 text-sm text-brand-neutral-500">
-        Browse products Sahel Pharma can supply. Contact your account manager to add a line to your next order.
+        Browse products MedSupply can supply. Contact your account manager to add a line to your next order.
       </p>
 
       <div className="mt-4">

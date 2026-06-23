@@ -82,7 +82,7 @@ export default function SupplierPortalDocumentsPage() {
     <div>
       <h1 className="font-serif text-3xl font-semibold">Documents</h1>
       <p className="mt-1 text-sm text-brand-neutral-500">
-        Compliance documents you have shared with Sahel Pharma (WHO-GMP, CoA, stability, licences).
+        Compliance documents you have shared with MedSupply (WHO-GMP, CoA, stability, licences).
       </p>
 
       {error && <p className="mt-4 text-sm text-red-600">{error}</p>}

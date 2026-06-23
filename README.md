@@ -1,6 +1,6 @@
-# Sahel Pharma Group Portal
+# MedSupply Import & Distribution LLC Portal
 
-B2B platform for **Sahel Pharma Group** — connects WHO-GMP certified Indian
+B2B platform for **MedSupply Import & Distribution LLC** — connects WHO-GMP certified Indian
 manufacturers with clinics, pharmacies and NGOs across Burkina Faso and the
 broader Sahel region. Covers suppliers, products, purchase orders, imports,
 clients, sales orders, stock, and a compliance-grade document library.
@@ -203,4 +203,4 @@ CI runs the same suite via [`.github/workflows/e2e.yml`](./.github/workflows/e2e
 
 ## License
 
-Proprietary — Sahel Pharma Group.
+Proprietary — MedSupply Import & Distribution LLC.

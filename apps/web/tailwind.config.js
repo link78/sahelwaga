@@ -4,7 +4,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Sahel Pharma palette: clinical, trustworthy
+        // MedSupply palette: clinical, trustworthy
         brand: {
           green: {
             50: '#f0f7f3',

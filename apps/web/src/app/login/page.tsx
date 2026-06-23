@@ -57,7 +57,7 @@ export default function LoginPage() {
         className="w-full max-w-sm rounded-lg border border-brand-neutral-100 bg-white p-8 shadow-sm"
       >
         <h1 className="font-serif text-2xl font-semibold text-brand-green-700">Sign in</h1>
-        <p className="mt-1 text-sm text-brand-neutral-500">Sahel Pharma Group internal portal.</p>
+        <p className="mt-1 text-sm text-brand-neutral-500">MedSupply Import & Distribution LLC internal portal.</p>
 
         <label className="mt-6 block text-sm font-medium">Email</label>
         <input

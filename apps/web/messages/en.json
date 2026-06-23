@@ -1,12 +1,12 @@
 {
   "common": {
-    "brand": "Sahel Pharma Group",
+    "brand": "MedSupply Import & Distribution LLC",
     "tagline": "US parent & Burkina Faso subsidiary",
     "signIn": "Sign in",
     "language": "Language",
     "english": "English",
     "french": "Français",
-    "footer": "© {year} Sahel Pharma Group — US parent & Burkina Faso subsidiary."
+    "footer": "© {year} MedSupply Import & Distribution LLC — US parent & Burkina Faso subsidiary."
   },
   "nav": {
     "products": "Products",
@@ -28,8 +28,8 @@
     "feature3_body": "From PO to import authorization to client delivery — every batch is traceable with full documentation."
   },
   "about": {
-    "title": "About Sahel Pharma Group",
-    "intro": "Sahel Pharma Group is a pharmaceutical import and distribution company with a US parent entity and a fully licensed subsidiary in Burkina Faso. We exist to close the supply gap for essential medicines in the Sahel and broader West Africa.",
+    "title": "About MedSupply Import & Distribution LLC",
+    "intro": "MedSupply Import & Distribution LLC is a pharmaceutical import and distribution company with a US parent entity and a fully licensed subsidiary in Burkina Faso. We exist to close the supply gap for essential medicines in the Sahel and broader West Africa.",
     "region_title": "Our Service Region",
     "region_body": "Headquartered in the United States with operational base in Ouagadougou, Burkina Faso, we serve clinics, pharmacies, and NGOs across Burkina Faso and West Africa. Our logistics network is designed for the unique infrastructure challenges of the Sahel corridor.",
     "us_title": "US Headquarters",
@@ -133,9 +133,9 @@
     "success_body": "Thank you for reaching out. Our team will respond within 2 business days.",
     "error": "We could not send your message. Please try again.",
     "us_hq": "US Headquarters",
-    "us_address": "Sahel Pharma Group LLC\nUnited States\ninfo@sahelpharmagroup.com",
+    "us_address": "MedSupply Import & Distribution LLC\nUnited States\ninfo@sahelpharmagroup.com",
     "bf_ops": "Burkina Faso Operations",
-    "bf_address": "Sahel Pharma SARL\nOuagadougou, Burkina Faso\noperations@sahelpharma.com",
+    "bf_address": "MedSupply SARL\nOuagadougou, Burkina Faso\noperations@sahelpharma.com",
     "hours_title": "Business Hours",
     "hours_body": "Monday–Friday: 8:00–17:00 GMT\nResponse time: within 2 business days"
   }

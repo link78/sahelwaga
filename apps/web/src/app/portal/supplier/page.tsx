@@ -57,7 +57,7 @@ export default function SupplierPortalHome() {
     <div>
       <h1 className="font-serif text-3xl font-semibold text-brand-neutral-900">{supplier.name}</h1>
       <p className="mt-1 text-sm text-brand-neutral-500">
-        Welcome back. Here is the current status of your relationship with Sahel Pharma.
+        Welcome back. Here is the current status of your relationship with MedSupply.
       </p>
 
       <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
