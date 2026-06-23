@@ -27,6 +27,13 @@ const envSchema = z.object({
   AUTH_COOKIE_SECURE: z.coerce.boolean().default(false),
   AUTH_COOKIE_DOMAIN: z.string().optional(),
   AUTH_COOKIE_SAMESITE: z.enum(['lax', 'strict', 'none']).default('lax'),
+  // Express `trust proxy` setting. Required when running behind a reverse
+  // proxy (nginx, Caddy, Cloudflare, load balancer) so that `req.ip`,
+  // `X-Forwarded-For`, and `X-Forwarded-Proto` are honoured. Accepts the
+  // same values as Express: a boolean, an integer hop count, or a
+  // comma-separated list of trusted IPs/subnets. Defaults to disabled
+  // (matches Express default) to avoid spoofing when no proxy is present.
+  TRUST_PROXY: z.string().default('false'),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -41,4 +48,19 @@ export const config = {
   corsOrigins: parsed.data.CORS_ORIGINS.split(',').map((s) => s.trim()).filter(Boolean),
   isProd: parsed.data.NODE_ENV === 'production',
   isTest: parsed.data.NODE_ENV === 'test',
+  trustProxy: parseTrustProxy(parsed.data.TRUST_PROXY),
 };
+
+/**
+ * Coerce the `TRUST_PROXY` env string into the value Express expects.
+ * - "true" / "false" → boolean
+ * - integer string → hop count (number)
+ * - anything else (IP/subnet list, named preset like "loopback") → string
+ */
+function parseTrustProxy(raw: string): boolean | number | string {
+  const v = raw.trim();
+  if (v === '' || v.toLowerCase() === 'false') return false;
+  if (v.toLowerCase() === 'true') return true;
+  if (/^\d+$/.test(v)) return Number(v);
+  return v;
+}

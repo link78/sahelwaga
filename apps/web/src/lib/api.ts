@@ -1,6 +1,28 @@
-// Public API base URL — falls back to local dev API. Used by both server and
-// client components, so we read NEXT_PUBLIC_API_URL.
+// Public API base URL — falls back to local dev API. Used by client
+// components (and therefore baked into the browser bundle). On the server
+// prefer `getServerApiBaseUrl()` below, which honours `API_INTERNAL_URL`
+// so SSR can reach the API over a private/internal address (e.g.
+// `http://localhost:4000` or a Docker service name) even when the
+// browser-facing URL is a public HTTPS hostname.
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? (typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:4000` : 'http://localhost:4000');
+
+/**
+ * Resolve the API base URL for *server-side* fetches (Server Components,
+ * route handlers, server actions). Prefers `API_INTERNAL_URL` (private
+ * address), then `NEXT_PUBLIC_API_URL` (public address, only safe when the
+ * Node process can resolve and reach it), then localhost.
+ *
+ * Must only be called from server code — referencing `API_INTERNAL_URL`
+ * from a client bundle is a no-op because Next.js does not expose
+ * non-`NEXT_PUBLIC_*` env vars to the browser.
+ */
+export function getServerApiBaseUrl(): string {
+  return (
+    process.env.API_INTERNAL_URL ??
+    process.env.NEXT_PUBLIC_API_URL ??
+    'http://localhost:4000'
+  );
+}
 
 const ACCESS_KEY = 'sahelwaga.access';
 const USER_KEY = 'sahelwaga.user';
