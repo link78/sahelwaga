@@ -1,6 +1,6 @@
 # Playwright E2E
 
-End-to-end smoke tests for the Sahel Pharma portal.
+End-to-end smoke tests for the MedSupply portal.
 
 ## Local run
 

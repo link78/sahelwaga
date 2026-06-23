@@ -1,4 +1,4 @@
-// Sahel Pharma Group Portal — Prisma schema
+// MedSupply Import & Distribution LLC Portal — Prisma schema
 // Covers all modules from the build plan: identity, suppliers, products,
 // documents, orders/imports, clients, inventory, and public-site leads.
 //

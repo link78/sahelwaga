@@ -54,7 +54,7 @@ export default function DashboardHome() {
     <div>
       <h1 className="font-serif text-3xl font-semibold text-brand-neutral-900">Overview</h1>
       <p className="mt-1 text-sm text-brand-neutral-500">
-        Real-time KPIs and alerts for Sahel Pharma operations.
+        Real-time KPIs and alerts for MedSupply operations.
       </p>
 
       {error && <p className="mt-4 text-sm text-red-600">{error}</p>}

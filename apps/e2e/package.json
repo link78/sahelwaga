@@ -2,7 +2,7 @@
   "name": "@sahelwaga/e2e",
   "version": "0.1.0",
   "private": true,
-  "description": "Playwright end-to-end smoke tests for Sahel Pharma portal.",
+  "description": "Playwright end-to-end smoke tests for MedSupply portal.",
   "scripts": {
     "test": "echo \"Skipping E2E in unit test runs; use 'pnpm e2e' instead.\" && exit 0",
     "e2e": "playwright test",

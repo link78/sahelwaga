@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * Playwright config for Sahel Pharma E2E smoke tests.
+ * Playwright config for MedSupply E2E smoke tests.
  *
  * Assumes the API (port 4000) and web (port 3000) are already running —
  * either started locally via `pnpm dev`, or by CI before invoking

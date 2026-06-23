@@ -2,7 +2,7 @@
   "name": "sahelwaga",
   "version": "0.1.0",
   "private": true,
-  "description": "Sahel Pharma Group Portal — B2B pharmaceutical supply chain platform",
+  "description": "MedSupply Import & Distribution LLC Portal — B2B pharmaceutical supply chain platform",
   "packageManager": "pnpm@9.0.0",
   "scripts": {
     "dev": "pnpm -r --parallel --filter './apps/*' run dev",

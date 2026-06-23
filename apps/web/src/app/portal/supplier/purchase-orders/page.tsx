@@ -54,7 +54,7 @@ export default function SupplierPortalPurchaseOrdersPage() {
     <div>
       <h1 className="font-serif text-3xl font-semibold">Purchase Orders</h1>
       <p className="mt-1 text-sm text-brand-neutral-500">
-        Read-only view of every PO Sahel Pharma has issued to you.
+        Read-only view of every PO MedSupply has issued to you.
       </p>
 
       {error && <p className="mt-4 text-sm text-red-600">{error}</p>}

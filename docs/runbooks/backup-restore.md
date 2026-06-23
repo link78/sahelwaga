@@ -1,6 +1,6 @@
 # Backup & restore
 
-The Sahel Pharma portal is stateful on Postgres only. S3 (MinIO in dev) is
+The MedSupply portal is stateful on Postgres only. S3 (MinIO in dev) is
 versioned at the bucket level, so document blobs are recoverable
 independently. This runbook covers Postgres.
 

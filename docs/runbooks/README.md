@@ -1,6 +1,6 @@
 # Runbooks
 
-Operational playbooks for the Sahel Pharma portal. Each runbook is short,
+Operational playbooks for the MedSupply portal. Each runbook is short,
 opinionated, and assumes you have:
 
 - Production SSH / cloud console access
