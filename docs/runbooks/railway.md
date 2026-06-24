@@ -123,6 +123,19 @@ passwords (or skip seeding) for any internet-facing deployment.**
   `schema.prisma` and create a new migration locally with
   `pnpm --filter @sahelwaga/db run migrate` (`prisma migrate dev`), then commit
   the generated migration folder.
+- **Failed migrations (P3009).** `db:migrate` runs through
+  `packages/db/scripts/migrate-deploy.ts`, a thin wrapper around
+  `prisma migrate deploy`. If a previous deploy was interrupted (dropped DB
+  connection, statement timeout, container killed mid-migration) Prisma records
+  the migration as *failed* and every later boot aborts with
+  `Error: P3009 — migrate found failed migrations`. Because our migrations are
+  pure DDL that Postgres runs in a single transaction, an interrupted migration
+  is fully rolled back (`applied_steps_count = 0`) and leaves no schema behind,
+  so the wrapper marks it rolled-back (`prisma migrate resolve --rolled-back`)
+  and retries the deploy automatically — the service self-heals on the next
+  boot. If a failed migration applied one or more steps, the wrapper does **not**
+  guess: it logs the migration name and exits so an operator can resolve it
+  manually following <https://pris.ly/d/migrate-resolve>.
 - **Health checks.** `api` is gated on `/health/ready` (verifies DB
   connectivity); `web` on `/en`.
 - **Cross-site cookies.** Because the API and web run on different Railway
