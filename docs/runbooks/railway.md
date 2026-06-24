@@ -113,8 +113,11 @@ passwords (or skip seeding) for any internet-facing deployment.**
 ## Notes & troubleshooting
 
 - **Schema sync.** The API service runs `prisma db push` on boot because the
-  repo has no committed migration history. It is additive and never drops data
-  silently. If you later adopt Prisma migrations, switch the start command to
+  repo has no committed migration history. This now lives in the API `start`
+  script (`pnpm run db:push && tsx src/server.ts`), so the schema is synced on
+  every boot regardless of whether the platform runs the `railway.json`
+  `startCommand` or falls back to `pnpm start`. It is additive and never drops
+  data silently. If you later adopt Prisma migrations, switch `db:push` to
   `prisma migrate deploy`.
 - **Health checks.** `api` is gated on `/health/ready` (verifies DB
   connectivity); `web` on `/en`.

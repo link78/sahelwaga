@@ -5,7 +5,7 @@
     "buildCommand": "pnpm --filter @sahelwaga/db exec prisma generate"
   },
   "deploy": {
-    "startCommand": "sh -c \"pnpm --filter @sahelwaga/db exec prisma db push --skip-generate && pnpm --filter @sahelwaga/api exec tsx src/server.ts\"",
+    "startCommand": "pnpm --filter @sahelwaga/api start",
     "healthcheckPath": "/health/ready",
     "healthcheckTimeout": 120,
     "restartPolicyType": "ON_FAILURE",
