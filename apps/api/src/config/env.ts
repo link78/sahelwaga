@@ -10,6 +10,10 @@ dotenvConfig({ path: resolve(__dirname, '../../../../.env') });
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   API_PORT: z.coerce.number().int().default(4000),
+  // Platforms such as Railway, Heroku and Render inject the listening port via
+  // the `PORT` env var. When present it takes precedence over `API_PORT` so the
+  // process binds to the port the platform routes traffic to.
+  PORT: z.coerce.number().int().optional(),
   API_HOST: z.string().default('0.0.0.0'),
   LOG_LEVEL: z.string().default('info'),
   CORS_ORIGINS: z.string().default('http://localhost:3000'),
@@ -45,6 +49,8 @@ if (!parsed.success) {
 
 export const config = {
   ...parsed.data,
+  // Prefer the platform-provided `PORT` (Railway/Heroku/Render) over `API_PORT`.
+  API_PORT: parsed.data.PORT ?? parsed.data.API_PORT,
   corsOrigins: parsed.data.CORS_ORIGINS.split(',').map((s) => s.trim()).filter(Boolean),
   isProd: parsed.data.NODE_ENV === 'production',
   isTest: parsed.data.NODE_ENV === 'test',
