@@ -51,7 +51,16 @@ export const config = {
   ...parsed.data,
   // Prefer the platform-provided `PORT` (Railway/Heroku/Render) over `API_PORT`.
   API_PORT: parsed.data.PORT ?? parsed.data.API_PORT,
-  corsOrigins: parsed.data.CORS_ORIGINS.split(',').map((s) => s.trim()).filter(Boolean),
+  // Split the allowlist and normalise each entry. The browser's `Origin`
+  // header is always scheme+host+port with no trailing slash, but operators
+  // routinely paste a deployment URL with a trailing slash (e.g.
+  // `https://web.up.railway.app/`). The `cors` package matches the allowlist
+  // exactly, so an un-normalised trailing slash would silently drop the
+  // `Access-Control-Allow-Origin` header. Strip trailing slashes so both
+  // forms work.
+  corsOrigins: parsed.data.CORS_ORIGINS.split(',')
+    .map((s) => s.trim().replace(/\/+$/, ''))
+    .filter(Boolean),
   isProd: parsed.data.NODE_ENV === 'production',
   isTest: parsed.data.NODE_ENV === 'test',
   trustProxy: parseTrustProxy(parsed.data.TRUST_PROXY),
