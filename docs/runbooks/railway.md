@@ -17,7 +17,13 @@ config-as-code:
 - [`apps/web/railway.json`](../../apps/web/railway.json)
 
 The API binds to the `PORT` Railway injects (falling back to `API_PORT`), and
-the web `start` script binds to `PORT` as well — no extra wiring needed.
+the web `start` script binds to `PORT` as well — no extra wiring needed. The
+web app builds with Next.js [standalone output](https://nextjs.org/docs/app/api-reference/next-config-js/output)
+(`output: 'standalone'`) so the production container ships a minimal,
+self-contained server — this keeps memory low and avoids the out-of-memory
+restarts that surface as a Railway **502 Bad Gateway** (no healthy upstream).
+The `build` step's `postbuild` copies the static assets into the standalone
+bundle, and `start` launches `.next/standalone/apps/web/server.js`.
 
 ---
 

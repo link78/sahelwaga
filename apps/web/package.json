@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev -p 3000 --hostname 0.0.0.0",
     "build": "next build",
-    "start": "next start -H 0.0.0.0 -p ${PORT:-3000}",
+    "postbuild": "rm -rf .next/standalone/apps/web/.next/static && cp -r .next/static .next/standalone/apps/web/.next/static && if [ -d public ]; then rm -rf .next/standalone/apps/web/public && cp -r public .next/standalone/apps/web/public; fi",
+    "start": "HOSTNAME=0.0.0.0 PORT=${PORT:-3000} node .next/standalone/apps/web/server.js",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
