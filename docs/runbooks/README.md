@@ -4,7 +4,8 @@ Operational playbooks for the MedSupply portal. Each runbook is short,
 opinionated, and assumes you have:
 
 - Production SSH / cloud console access
-- `kubectl` (or equivalent docker-compose ops) for the target environment
+- Production access to the [Railway](https://railway.com/) project (API, web,
+  and Postgres services)
 - Access to the Postgres primary
 - Credentials for the demo `admin@sahelpharma.local` account (test envs only)
 
