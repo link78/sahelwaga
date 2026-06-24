@@ -6,11 +6,12 @@ services in one project**:
 | Service    | Source                | Notes                                   |
 | ---------- | --------------------- | --------------------------------------- |
 | `postgres` | Railway Postgres plugin | Managed database, provides `DATABASE_URL` |
-| `api`      | `apps/api/Dockerfile` | Express + Prisma API                    |
-| `web`      | `apps/web/Dockerfile` | Next.js front end                       |
+| `api`      | `apps/api` (Nixpacks) | Express + Prisma API                    |
+| `web`      | `apps/web` (Nixpacks) | Next.js front end                       |
 
-Both app images are built from the **monorepo root** (they need the pnpm
-workspace). The repo ships per-service config-as-code:
+Both apps are built by Railway's native **Nixpacks** builder from the
+**monorepo root** (they need the pnpm workspace). The repo ships per-service
+config-as-code:
 
 - [`apps/api/railway.json`](../../apps/api/railway.json)
 - [`apps/web/railway.json`](../../apps/web/railway.json)
@@ -30,11 +31,11 @@ the web `start` script binds to `PORT` as well — no extra wiring needed.
 
 1. **+ New → GitHub Repo →** select this repository.
 2. In the service **Settings**:
-   - **Root Directory:** `/` (the repo root — the Docker build needs the whole
+   - **Root Directory:** `/` (the repo root — the build needs the whole
      workspace).
    - **Config-as-code / Railway config file:** `apps/api/railway.json`
-     (this selects the Dockerfile, start command, and `/health/ready`
-     health check).
+     (this selects the Nixpacks build command, start command, and
+     `/health/ready` health check).
 3. Add the environment variables below, then deploy. The container runs
    `prisma db push` on boot to sync the schema to the database.
 
@@ -62,9 +63,9 @@ the web `start` script binds to `PORT` as well — no extra wiring needed.
    - **Root Directory:** `/`
    - **Config-as-code / Railway config file:** `apps/web/railway.json`
 3. `NEXT_PUBLIC_API_URL` is **baked into the browser bundle at build time**, so
-   it must be available to the Docker build. Set it as a service variable and
-   also pass it as a Docker **build arg** (Settings → Build → Build Args, or via
-   the variable being exposed to the build):
+   it must be available during the build. With Nixpacks, service variables are
+   exposed to the build automatically — just set it as a service variable
+   (below) before the first deploy:
 
 ### Web variables
 
@@ -74,9 +75,10 @@ the web `start` script binds to `PORT` as well — no extra wiring needed.
 | `NODE_ENV`            | `production`                                          |
 | `NEXTAUTH_SECRET`     | long random string (≥ 32 chars)                      |
 
-> The web `Dockerfile` declares `ARG NEXT_PUBLIC_API_URL`. Ensure the value is
-> present at build time; otherwise the browser will fall back to
-> `window.location.hostname:4000` and fail to reach the API.
+> Make sure `NEXT_PUBLIC_API_URL` is set **before** the build runs; otherwise
+> the browser will fall back to `window.location.hostname:4000` and fail to
+> reach the API. If you change it later, trigger a redeploy so the new value is
+> baked in.
 
 ## 4. Generate public domains
 
@@ -104,9 +106,9 @@ passwords (or skip seeding) for any internet-facing deployment.**
 
 ## Notes & troubleshooting
 
-- **Schema sync.** The images run `prisma db push` because the repo has no
-  committed migration history. It is additive and never drops data silently. If
-  you later adopt Prisma migrations, switch the start command to
+- **Schema sync.** The API service runs `prisma db push` on boot because the
+  repo has no committed migration history. It is additive and never drops data
+  silently. If you later adopt Prisma migrations, switch the start command to
   `prisma migrate deploy`.
 - **Health checks.** `api` is gated on `/health/ready` (verifies DB
   connectivity); `web` on `/en`.
@@ -116,8 +118,6 @@ passwords (or skip seeding) for any internet-facing deployment.**
 - **Redis / S3 / SMTP.** Not required to boot. Add managed equivalents and the
   matching env vars (`REDIS_URL`, `S3_*`, `SMTP_*`) when you wire up those
   features.
-- **Local Docker parity.** Build the same images locally with:
-  ```bash
-  docker build -f apps/api/Dockerfile -t sahelwaga-api .
-  docker build -f apps/web/Dockerfile --build-arg NEXT_PUBLIC_API_URL=http://localhost:4000 -t sahelwaga-web .
-  ```
+- **Build commands.** Each service's `railway.json` defines the Nixpacks
+  `buildCommand` (Prisma client generation + workspace builds). Nixpacks runs
+  `pnpm install` automatically beforehand.

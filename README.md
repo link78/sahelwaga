@@ -186,8 +186,8 @@ The Suppliers module is the canonical example. To add e.g. Products:
 - Operational runbooks live in [`docs/runbooks/`](./docs/runbooks/README.md).
 - Deploy to [Railway](https://railway.com/): see
   [`docs/runbooks/railway.md`](./docs/runbooks/railway.md). Each app ships a
-  Dockerfile (`apps/api/Dockerfile`, `apps/web/Dockerfile`) and a Railway
-  config file (`apps/api/railway.json`, `apps/web/railway.json`).
+  Railway config file (`apps/api/railway.json`, `apps/web/railway.json`) that
+  builds with Nixpacks.
 - API observability surfaces at `/health`, `/health/live`, `/health/ready`
   and `/health/metrics` (Prometheus text format). Every request gets an
   `x-request-id` header (auto-generated when missing) which is echoed on the
