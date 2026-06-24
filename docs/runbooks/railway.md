@@ -43,7 +43,8 @@ bundle, and `start` launches `.next/standalone/apps/web/server.js`.
      (this selects the Nixpacks build command, start command, and
      `/health/ready` health check).
 3. Add the environment variables below, then deploy. The container runs
-   `prisma db push` on boot to sync the schema to the database.
+   `prisma migrate deploy` on boot to apply the committed migrations and create
+   the schema.
 
 ### API variables
 
@@ -112,13 +113,16 @@ passwords (or skip seeding) for any internet-facing deployment.**
 
 ## Notes & troubleshooting
 
-- **Schema sync.** The API service runs `prisma db push` on boot because the
-  repo has no committed migration history. This now lives in the API `start`
-  script (`pnpm run db:push && tsx src/server.ts`), so the schema is synced on
-  every boot regardless of whether the platform runs the `railway.json`
-  `startCommand` or falls back to `pnpm start`. It is additive and never drops
-  data silently. If you later adopt Prisma migrations, switch `db:push` to
-  `prisma migrate deploy`.
+- **Schema migrations.** The API service runs `prisma migrate deploy` on boot
+  to apply the committed migrations in
+  `packages/db/prisma/migrations`. This lives in the API `start` script
+  (`pnpm run db:migrate && tsx src/server.ts`), so the schema is created/updated
+  on every boot regardless of whether the platform runs the `railway.json`
+  `startCommand` or falls back to `pnpm start`. `migrate deploy` only applies
+  pending migrations and never resets data. To evolve the schema, edit
+  `schema.prisma` and create a new migration locally with
+  `pnpm --filter @sahelwaga/db run migrate` (`prisma migrate dev`), then commit
+  the generated migration folder.
 - **Health checks.** `api` is gated on `/health/ready` (verifies DB
   connectivity); `web` on `/en`.
 - **Cross-site cookies.** Because the API and web run on different Railway
