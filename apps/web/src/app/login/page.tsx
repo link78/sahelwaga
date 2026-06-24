@@ -62,6 +62,8 @@ export default function LoginPage() {
         <label className="mt-6 block text-sm font-medium">Email</label>
         <input
           type="email"
+          name="email"
+          autoComplete="username"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="mt-1 w-full rounded-md border border-brand-neutral-100 px-3 py-2 focus:border-brand-green-500 focus:outline-none"
@@ -71,6 +73,8 @@ export default function LoginPage() {
         <label className="mt-4 block text-sm font-medium">Password</label>
         <input
           type="password"
+          name="password"
+          autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="mt-1 w-full rounded-md border border-brand-neutral-100 px-3 py-2 focus:border-brand-green-500 focus:outline-none"
