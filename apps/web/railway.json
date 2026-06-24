@@ -1,0 +1,14 @@
+{
+  "$schema": "https://railway.com/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS",
+    "buildCommand": "pnpm --filter @sahelwaga/web build"
+  },
+  "deploy": {
+    "startCommand": "pnpm --filter @sahelwaga/web start",
+    "healthcheckPath": "/en",
+    "healthcheckTimeout": 120,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 5
+  }
+}

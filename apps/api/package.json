@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "dotenv -e ../../.env -- tsx watch src/server.ts",
+    "prebuild": "pnpm --filter @sahelwaga/db exec prisma generate",
     "build": "tsc",
-    "start": "node dist/server.js",
+    "db:migrate": "pnpm --filter @sahelwaga/db exec tsx scripts/migrate-deploy.ts",
+    "start": "pnpm run db:migrate && tsx src/server.ts",
     "lint": "eslint \"src/**/*.ts\"",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"

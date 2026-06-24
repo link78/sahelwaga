@@ -11,13 +11,13 @@
   "scripts": {
     "generate": "dotenv -e ../../.env -- prisma generate",
     "migrate": "dotenv -e ../../.env -- prisma migrate dev",
-    "migrate:deploy": "dotenv -e ../../.env -- prisma migrate deploy",
+    "migrate:deploy": "dotenv -e ../../.env -- tsx scripts/migrate-deploy.ts",
     "studio": "dotenv -e ../../.env -- prisma studio",
     "seed": "dotenv -e ../../.env -- tsx prisma/seed.ts",
     "validate": "dotenv -e ../../.env -- prisma validate",
     "lint": "echo 'no-op'",
     "typecheck": "tsc --noEmit",
-    "build": "echo 'no-op'"
+    "build": "prisma generate"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

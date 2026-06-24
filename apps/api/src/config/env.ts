@@ -10,6 +10,10 @@ dotenvConfig({ path: resolve(__dirname, '../../../../.env') });
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   API_PORT: z.coerce.number().int().default(4000),
+  // Platforms such as Railway, Heroku and Render inject the listening port via
+  // the `PORT` env var. When present it takes precedence over `API_PORT` so the
+  // process binds to the port the platform routes traffic to.
+  PORT: z.coerce.number().int().optional(),
   API_HOST: z.string().default('0.0.0.0'),
   LOG_LEVEL: z.string().default('info'),
   CORS_ORIGINS: z.string().default('http://localhost:3000'),
@@ -45,7 +49,18 @@ if (!parsed.success) {
 
 export const config = {
   ...parsed.data,
-  corsOrigins: parsed.data.CORS_ORIGINS.split(',').map((s) => s.trim()).filter(Boolean),
+  // Prefer the platform-provided `PORT` (Railway/Heroku/Render) over `API_PORT`.
+  API_PORT: parsed.data.PORT ?? parsed.data.API_PORT,
+  // Split the allowlist and normalise each entry. The browser's `Origin`
+  // header is always scheme+host+port with no trailing slash, but operators
+  // routinely paste a deployment URL with a trailing slash (e.g.
+  // `https://web.up.railway.app/`). The `cors` package matches the allowlist
+  // exactly, so an un-normalised trailing slash would silently drop the
+  // `Access-Control-Allow-Origin` header. Strip trailing slashes so both
+  // forms work.
+  corsOrigins: parsed.data.CORS_ORIGINS.split(',')
+    .map((s) => s.trim().replace(/\/+$/, ''))
+    .filter(Boolean),
   isProd: parsed.data.NODE_ENV === 'production',
   isTest: parsed.data.NODE_ENV === 'test',
   trustProxy: parseTrustProxy(parsed.data.TRUST_PROXY),

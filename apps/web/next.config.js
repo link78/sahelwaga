@@ -5,6 +5,14 @@ const withNextIntl = createNextIntlPlugin('./src/i18n.ts');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Produce a self-contained server bundle (`.next/standalone`) so the
+  // production container ships only the files it needs and starts with a
+  // much smaller memory footprint. This avoids the out-of-memory restarts
+  // that surface as a Railway 502 (no healthy upstream) on constrained
+  // plans. In a pnpm monorepo Next must trace files from the workspace root
+  // so the hoisted `node_modules` are included.
+  output: 'standalone',
+  outputFileTracingRoot: require('path').join(__dirname, '../../'),
   experimental: {
     typedRoutes: false,
   },

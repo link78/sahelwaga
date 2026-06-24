@@ -20,17 +20,18 @@ Production deploys are cut from a signed Git tag of the form
    git tag -s vX.Y.Z -m "Release vX.Y.Z"
    git push origin vX.Y.Z
    ```
-2. CI builds and publishes Docker images tagged `vX.Y.Z`.
-3. Apply Prisma migrations against production:
+2. Apply Prisma migrations against production:
    ```bash
    DATABASE_URL=<prod> pnpm --filter @sahelwaga/db exec prisma migrate deploy
    ```
    Migrations are forward-only. Never edit a migration that has run in prod.
-4. Roll out images (one component at a time; API first, then web):
-   - Update the API deployment image tag → wait for all pods `Ready`
-     and `/health/ready` → `200`.
-   - Update the web deployment image tag → wait for all pods `Ready`.
-5. Smoke test in production:
+3. Roll out the release on Railway (one service at a time; API first, then
+   web). For each service, deploy the tagged commit — Railway rebuilds it with
+   Nixpacks from the monorepo (see [`railway.md`](./railway.md)):
+   - Deploy the API service → wait for the deployment to go `Active` and
+     `/health/ready` → `200`.
+   - Deploy the web service → wait for the deployment to go `Active`.
+4. Smoke test in production:
    - `curl https://<api>/health/live` reports the new `version`.
    - `curl https://<web>/en` renders the home page.
    - Sign in with a test account and load the dashboard.
@@ -46,9 +47,10 @@ than ~30 minutes.
    version. If any are destructive (column drops, type changes, NOT NULL
    without default) you **must** restore from backup instead of rolling
    back. See [`backup-restore.md`](./backup-restore.md).
-3. Re-deploy the previous image tag:
-   - API: `kubectl set image deploy/sahel-api api=<registry>/sahel-api:vX.Y.(Z-1)`
-   - Web: `kubectl set image deploy/sahel-web web=<registry>/sahel-web:vX.Y.(Z-1)`
+3. Re-deploy the previous good release on Railway:
+   - In each service's **Deployments** tab, redeploy the deployment built from
+     `vX.Y.(Z-1)` (or push/redeploy that tag). Roll back the API first, then
+     the web service.
 4. Verify `/health/live` reports the previous `version`.
 5. Announce the rollback in the incident channel and open a follow-up
    ticket to fix-forward.

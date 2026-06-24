@@ -1,10 +1,53 @@
-// Public API base URL — falls back to local dev API. Used by client
-// components (and therefore baked into the browser bundle). On the server
-// prefer `getServerApiBaseUrl()` below, which honours `API_INTERNAL_URL`
-// so SSR can reach the API over a private/internal address (e.g.
-// `http://localhost:4000` or a Docker service name) even when the
-// browser-facing URL is a public HTTPS hostname.
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? (typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:4000` : 'http://localhost:4000');
+// Public API base URL — used by client components (and therefore baked into
+// the browser bundle). On the server prefer `getServerApiBaseUrl()` below,
+// which honours `API_INTERNAL_URL` so SSR can reach the API over a
+// private/internal address (e.g. `http://localhost:4000` or a Docker service
+// name) even when the browser-facing URL is a public HTTPS hostname.
+//
+// Default port the API listens on (see `API_PORT` in `.env.example`). Used
+// when deriving the API origin from the page host for external viewers.
+const DEFAULT_API_PORT = 4000;
+
+function isLocalhostUrl(url: string): boolean {
+  return /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:|\/|$)/i.test(url);
+}
+
+/**
+ * Resolve the API base URL used by *browser* code. `NEXT_PUBLIC_API_URL` is
+ * inlined into the client bundle at build time, so a value of
+ * `http://localhost:4000` (the documented dev default) would make the browser
+ * try to reach the API on the *viewer's own machine* when the site is opened
+ * from an external host/IP (e.g. `http://66.94.119.88:3000`).
+ *
+ * To make external viewing work without hand-editing env vars, when the page
+ * is served from a non-localhost host but the configured API URL is missing or
+ * points at localhost, derive the API origin from the current page host. A
+ * real external/HTTPS `NEXT_PUBLIC_API_URL` is always honoured as-is.
+ */
+function resolveBrowserApiBaseUrl(): string {
+  const configured = process.env.NEXT_PUBLIC_API_URL;
+
+  // Server / build time: no `window`. Honour the configured value or fall
+  // back to the local dev API.
+  if (typeof window === 'undefined') {
+    return configured ?? 'http://localhost:4000';
+  }
+
+  const pageHost = window.location.hostname;
+  const viewingLocally =
+    pageHost === 'localhost' || pageHost === '127.0.0.1' || pageHost === '[::1]';
+  const configPointsAtLocalhost = !configured || isLocalhostUrl(configured);
+
+  // External viewer + localhost-only config → derive the API host from the
+  // page so the browser can actually reach it.
+  if (!viewingLocally && configPointsAtLocalhost) {
+    return `${window.location.protocol}//${pageHost}:${DEFAULT_API_PORT}`;
+  }
+
+  return configured ?? `${window.location.protocol}//${pageHost}:${DEFAULT_API_PORT}`;
+}
+
+export const API_BASE_URL = resolveBrowserApiBaseUrl();
 
 /**
  * Resolve the API base URL for *server-side* fetches (Server Components,
