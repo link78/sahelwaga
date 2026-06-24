@@ -17,7 +17,7 @@
     "validate": "dotenv -e ../../.env -- prisma validate",
     "lint": "echo 'no-op'",
     "typecheck": "tsc --noEmit",
-    "build": "echo 'no-op'"
+    "build": "prisma generate"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
