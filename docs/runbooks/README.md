@@ -14,6 +14,7 @@ opinionated, and assumes you have:
 | ------- | ----------- |
 | [incident-response.md](./incident-response.md) | API/web is down, error rates spike, or DB connectivity fails |
 | [deploy.md](./deploy.md) | Routine deploy of a tagged release or rollback to a previous tag |
+| [railway.md](./railway.md) | Deploy the API + web + Postgres to Railway (railway.com) |
 | [backup-restore.md](./backup-restore.md) | Take an ad-hoc backup, restore from one, or test the restore drill |
 | [expiry-scan.md](./expiry-scan.md) | Diagnose missing compliance alerts or trigger an on-demand scan |
 | [observability.md](./observability.md) | Where to find logs, metrics, health endpoints, and request IDs |

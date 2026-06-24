@@ -1,0 +1,29 @@
+# Dependencies (reinstalled inside the image)
+**/node_modules
+.pnpm-store
+
+# Build outputs
+**/dist
+**/build
+**/.next
+**/out
+**/*.tsbuildinfo
+
+# Local env / secrets — never bake into an image
+.env
+.env.local
+.env.*.local
+
+# VCS / CI / tooling
+.git
+.github
+.idea
+.vscode
+
+# Tests / docs not needed at runtime
+apps/e2e
+docs
+
+# Logs & coverage
+**/*.log
+coverage
