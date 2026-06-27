@@ -25,12 +25,15 @@ Production deploys are cut from a signed Git tag of the form
    DATABASE_URL=<prod> pnpm --filter @sahelwaga/db exec prisma migrate deploy
    ```
    Migrations are forward-only. Never edit a migration that has run in prod.
-3. Roll out the release on Railway (one service at a time; API first, then
-   web). For each service, deploy the tagged commit — Railway rebuilds it with
-   Nixpacks from the monorepo (see [`railway.md`](./railway.md)):
-   - Deploy the API service → wait for the deployment to go `Active` and
+3. Roll out the release on the Ubuntu host (API first, then web). For the full
+   build + systemd setup see [`ubuntu.md`](./ubuntu.md):
+   - On the host, check out the tagged commit and reinstall/rebuild:
+     `git fetch --tags && git checkout vX.Y.Z && pnpm install --frozen-lockfile`,
+     then `pnpm --filter @sahelwaga/db exec prisma generate` and
+     `pnpm --filter @sahelwaga/web build`.
+   - `sudo systemctl restart sahelwaga-api` → wait until
      `/health/ready` → `200`.
-   - Deploy the web service → wait for the deployment to go `Active`.
+   - `sudo systemctl restart sahelwaga-web` → wait until `/en` → `200`.
 4. Smoke test in production:
    - `curl https://<api>/health/live` reports the new `version`.
    - `curl https://<web>/en` renders the home page.
@@ -47,10 +50,13 @@ than ~30 minutes.
    version. If any are destructive (column drops, type changes, NOT NULL
    without default) you **must** restore from backup instead of rolling
    back. See [`backup-restore.md`](./backup-restore.md).
-3. Re-deploy the previous good release on Railway:
-   - In each service's **Deployments** tab, redeploy the deployment built from
-     `vX.Y.(Z-1)` (or push/redeploy that tag). Roll back the API first, then
-     the web service.
+3. Re-deploy the previous good release on the Ubuntu host:
+   - Check out the previous good tag and rebuild
+     (`git checkout vX.Y.(Z-1) && pnpm install --frozen-lockfile`, then
+     `pnpm --filter @sahelwaga/db exec prisma generate` and
+     `pnpm --filter @sahelwaga/web build`). Restart the API first
+     (`sudo systemctl restart sahelwaga-api`), then the web service
+     (`sudo systemctl restart sahelwaga-web`).
 4. Verify `/health/live` reports the previous `version`.
 5. Announce the rollback in the incident channel and open a follow-up
    ticket to fix-forward.

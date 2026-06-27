@@ -184,10 +184,10 @@ The Suppliers module is the canonical example. To add e.g. Products:
 ## Operations
 
 - Operational runbooks live in [`docs/runbooks/`](./docs/runbooks/README.md).
-- Deploy to [Railway](https://railway.com/): see
-  [`docs/runbooks/railway.md`](./docs/runbooks/railway.md). Each app ships a
-  Railway config file (`apps/api/railway.json`, `apps/web/railway.json`) that
-  builds with Nixpacks.
+- Deploy to an Ubuntu host (systemd + nginx): see
+  [`docs/runbooks/ubuntu.md`](./docs/runbooks/ubuntu.md). The API runs from
+  TypeScript source under `tsx`; the web app builds with Next.js standalone
+  output and both run as systemd services behind nginx.
 - API observability surfaces at `/health`, `/health/live`, `/health/ready`
   and `/health/metrics` (Prometheus text format). Every request gets an
   `x-request-id` header (auto-generated when missing) which is echoed on the
