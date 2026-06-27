@@ -12,9 +12,31 @@ import { getServerApiBaseUrl } from '../../../lib/api';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+// Only the genuinely public, unauthenticated endpoints may be proxied. This
+// allowlist also prevents path-traversal segments (e.g. `..`) from escaping
+// the `/public/` prefix and reaching authenticated API routes once the URL is
+// normalised by the upstream fetch.
+const ALLOWED_TOP_LEVEL = new Set(['products', 'leads']);
+
 async function proxy(req: NextRequest, { params }: { params: { path: string[] } }): Promise<Response> {
+  const segments = params.path ?? [];
+  const top = segments[0];
+  if (!top || !ALLOWED_TOP_LEVEL.has(top)) {
+    return new Response(JSON.stringify({ error: 'Not Found' }), {
+      status: 404,
+      headers: { 'content-type': 'application/json' },
+    });
+  }
+  // Reject any traversal/separator segments defensively.
+  if (segments.some((s) => s === '.' || s === '..' || s.includes('/') || s.includes('\\'))) {
+    return new Response(JSON.stringify({ error: 'Not Found' }), {
+      status: 404,
+      headers: { 'content-type': 'application/json' },
+    });
+  }
+
   const base = getServerApiBaseUrl().replace(/\/+$/, '');
-  const path = (params.path ?? []).join('/');
+  const path = segments.map((s) => encodeURIComponent(s)).join('/');
   const target = `${base}/public/${path}${req.nextUrl.search}`;
 
   const headers = new Headers();
