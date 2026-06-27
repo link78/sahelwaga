@@ -79,13 +79,22 @@ bundle, and `start` launches `.next/standalone/apps/web/server.js`.
 | Variable              | Value                                                |
 | --------------------- | ---------------------------------------------------- |
 | `NEXT_PUBLIC_API_URL` | the API public URL, e.g. `https://<api>.up.railway.app` |
+| `API_INTERNAL_URL`    | API address reachable from the web server, e.g. `https://<api>.up.railway.app` or a `*.railway.internal` host |
 | `NODE_ENV`            | `production`                                          |
 | `NEXTAUTH_SECRET`     | long random string (≥ 32 chars)                      |
 
 > Make sure `NEXT_PUBLIC_API_URL` is set **before** the build runs; otherwise
 > the browser will fall back to `window.location.hostname:4000` and fail to
-> reach the API. If you change it later, trigger a redeploy so the new value is
-> baked in.
+> reach the **authenticated** app (dashboard/portal). If you change it later,
+> trigger a redeploy so the new value is baked in.
+>
+> The **public marketing endpoints** (`/public/products`, `/public/leads`) are
+> served same-origin: the browser calls them on the web domain and the web
+> server proxies to the API using `API_INTERNAL_URL` (resolved at **runtime**,
+> no rebuild needed). So if the catalog page 404s on `/public/products`, set
+> `API_INTERNAL_URL` on the **web** service to an address that reaches the API
+> and restart — you do **not** need a separate API domain or a rebuild for the
+> public pages.
 
 ## 4. Generate public domains
 
@@ -93,7 +102,9 @@ For both `api` and `web`: **Settings → Networking → Generate Domain.** Then 
 back and make sure:
 
 - `web` → `NEXT_PUBLIC_API_URL` points at the **api** domain (and redeploy web
-  so the new value is baked in).
+  so the new value is baked in) for the authenticated app.
+- `web` → `API_INTERNAL_URL` reaches the **api** service (used by SSR and the
+  same-origin `/public/*` proxy).
 - `api` → `CORS_ORIGINS` includes the **web** domain.
 
 ## 5. Seed demo data (optional, one-off)
