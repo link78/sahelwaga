@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import SupplierForm from '../../_components/SupplierForm';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? (typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:4000` : 'http://localhost:4000');
+import { API_BASE_URL as API_URL } from '../../../../../lib/api';
 
 export default function EditSupplierPage() {
   const params = useParams();

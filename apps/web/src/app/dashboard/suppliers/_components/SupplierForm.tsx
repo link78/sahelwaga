@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? (typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:4000` : 'http://localhost:4000');
+import { API_BASE_URL as API_URL } from '../../../../lib/api';
 
 const STATUSES = ['PROSPECT', 'UNDER_REVIEW', 'APPROVED', 'BLOCKED', 'REJECTED'] as const;
 const GMP_STATUSES = ['UNKNOWN', 'PENDING', 'VERIFIED', 'EXPIRED'] as const;

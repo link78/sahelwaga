@@ -3,7 +3,6 @@
 import { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
-import { API_BASE_URL } from '../../../lib/api';
 
 type IntentKey = 'partnership' | 'supplier' | 'buyer' | 'general';
 
@@ -39,7 +38,7 @@ function ContactFormInner() {
     setSubmitting(true);
     setError(null);
     try {
-      const res = await fetch(`${API_BASE_URL}/public/leads`, {
+      const res = await fetch(`/public/leads`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

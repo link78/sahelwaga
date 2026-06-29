@@ -14,6 +14,7 @@
     "migrate:deploy": "dotenv -e ../../.env -- tsx scripts/migrate-deploy.ts",
     "studio": "dotenv -e ../../.env -- prisma studio",
     "seed": "dotenv -e ../../.env -- tsx prisma/seed.ts",
+    "reset-password": "dotenv -e ../../.env -- tsx scripts/reset-password.ts",
     "validate": "dotenv -e ../../.env -- prisma validate",
     "lint": "echo 'no-op'",
     "typecheck": "tsc --noEmit",

@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { API_BASE_URL } from '../../../lib/api';
 
 const CATEGORIES = [
   'ANTIBIOTIC',
@@ -44,7 +43,7 @@ export function CatalogClient({ initialItems, initialError }: CatalogClientProps
     let cancelled = false;
     const params = new URLSearchParams();
     if (category !== 'ALL') params.set('category', category);
-    fetch(`${API_BASE_URL}/public/products?${params.toString()}`)
+    fetch(`/public/products?${params.toString()}`)
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
       .then((data: { items: CatalogProduct[] }) => {
         if (!cancelled) {

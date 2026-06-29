@@ -12,6 +12,30 @@ function isLocalhostUrl(url: string): boolean {
   return /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:|\/|$)/i.test(url);
 }
 
+function isIpLikeHost(hostname: string): boolean {
+  // IPv4 (e.g. 66.94.119.88) or IPv6 (contains ':'). Subdomain derivation does
+  // not make sense for bare IPs, so callers keep the page origin instead.
+  return /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname) || hostname.includes(':');
+}
+
+/**
+ * Derive the conventional API hostname for a given page host. The deployment
+ * serves the API from an `api.` subdomain behind nginx (e.g. the web app on
+ * `app.example.com`/`example.com` and the API on `api.example.com`), so:
+ *   - `example.com`      → `api.example.com`
+ *   - `app.example.com`  → `api.example.com`  (replace the `app`/`www` label)
+ *   - `www.example.com`  → `api.example.com`
+ *   - `api.example.com`  → `api.example.com`  (already the API host)
+ */
+function deriveApiHost(hostname: string): string {
+  const labels = hostname.split('.');
+  if (labels[0] === 'api') return hostname;
+  if (labels[0] === 'www' || labels[0] === 'app') {
+    return ['api', ...labels.slice(1)].join('.');
+  }
+  return `api.${hostname}`;
+}
+
 /**
  * Resolve the API base URL used by *browser* code. `NEXT_PUBLIC_API_URL` is
  * inlined into the client bundle at build time, so a value of
@@ -23,28 +47,82 @@ function isLocalhostUrl(url: string): boolean {
  * is served from a non-localhost host but the configured API URL is missing or
  * points at localhost, derive the API origin from the current page host. A
  * real external/HTTPS `NEXT_PUBLIC_API_URL` is always honoured as-is.
+ *
+ * Crucially, when the page is served over HTTPS we never derive
+ * `https://host:4000`: the API on the conventional port serves plain HTTP, so
+ * a TLS handshake there fails with `ERR_SSL_PROTOCOL_ERROR`. Instead we derive
+ * the `api.` subdomain (e.g. `https://api.example.com`), matching the
+ * reverse-proxy convention this app deploys with, and warn.
+ *
+ * The resolution logic is separated from `window` so it can be unit tested.
+ * `location` is the (sub)set of `window.location` we need; pass `null` to
+ * model server/build time where there is no `window`.
  */
-function resolveBrowserApiBaseUrl(): string {
-  const configured = process.env.NEXT_PUBLIC_API_URL;
-
+export function deriveBrowserApiBaseUrl(
+  configured: string | undefined,
+  location: { protocol: string; hostname: string; origin: string } | null,
+): string {
   // Server / build time: no `window`. Honour the configured value or fall
   // back to the local dev API.
-  if (typeof window === 'undefined') {
+  if (!location) {
     return configured ?? 'http://localhost:4000';
   }
 
-  const pageHost = window.location.hostname;
+  const { protocol, hostname, origin } = location;
   const viewingLocally =
-    pageHost === 'localhost' || pageHost === '127.0.0.1' || pageHost === '[::1]';
+    hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]';
   const configPointsAtLocalhost = !configured || isLocalhostUrl(configured);
 
-  // External viewer + localhost-only config → derive the API host from the
-  // page so the browser can actually reach it.
-  if (!viewingLocally && configPointsAtLocalhost) {
-    return `${window.location.protocol}//${pageHost}:${DEFAULT_API_PORT}`;
+  // A real external/HTTPS configured URL is always honoured as-is.
+  if (configured && !configPointsAtLocalhost) {
+    return configured;
   }
 
-  return configured ?? `${window.location.protocol}//${pageHost}:${DEFAULT_API_PORT}`;
+  // Viewing from localhost → the documented dev default (or honour config).
+  if (viewingLocally) {
+    return configured ?? `${protocol}//${hostname}:${DEFAULT_API_PORT}`;
+  }
+
+  // External viewer with no usable config: derive the API origin from the
+  // page host so the browser can actually reach it.
+  if (protocol === 'https:') {
+    // Never derive `https://host:${DEFAULT_API_PORT}` — the API on the
+    // conventional 4000 port serves plain HTTP, so a TLS handshake there
+    // fails with `ERR_SSL_PROTOCOL_ERROR`. When the page is HTTPS, the API is
+    // exposed over HTTPS on the `api.` subdomain (the reverse-proxy convention
+    // this app deploys with). Returning the bare page origin instead would
+    // POST `/auth/login` to the web app and 404, so derive `api.<domain>`.
+    // Bare IPs can't be turned into a subdomain, so keep the page origin then.
+    const apiBase = isIpLikeHost(hostname)
+      ? origin
+      : `https://${deriveApiHost(hostname)}`;
+    if (typeof console !== 'undefined') {
+      console.warn(
+        '[api] NEXT_PUBLIC_API_URL is unset or points at localhost while the ' +
+          `page is served over HTTPS. Falling back to ${apiBase}; set ` +
+          'NEXT_PUBLIC_API_URL to your API URL (e.g. https://api.example.com) ' +
+          'and rebuild the web app to be explicit.',
+      );
+    }
+    return apiBase;
+  }
+
+  // Plain-HTTP external viewer (e.g. http://66.94.119.88:3000): derive the
+  // API host on the conventional port; plain HTTP there works fine.
+  return `${protocol}//${hostname}:${DEFAULT_API_PORT}`;
+}
+
+function resolveBrowserApiBaseUrl(): string {
+  const configured = process.env.NEXT_PUBLIC_API_URL;
+  const location =
+    typeof window === 'undefined'
+      ? null
+      : {
+          protocol: window.location.protocol,
+          hostname: window.location.hostname,
+          origin: window.location.origin,
+        };
+  return deriveBrowserApiBaseUrl(configured, location);
 }
 
 export const API_BASE_URL = resolveBrowserApiBaseUrl();
