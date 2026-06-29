@@ -38,6 +38,19 @@ const envSchema = z.object({
   // comma-separated list of trusted IPs/subnets. Defaults to disabled
   // (matches Express default) to avoid spoofing when no proxy is present.
   TRUST_PROXY: z.string().default('false'),
+  // --- Outbound email (SMTP) ----------------------------------------------
+  // Used to send lead notifications from the public contact form. All
+  // SMTP_* vars are optional; when SMTP_HOST is unset the mailer becomes a
+  // no-op (lead is still persisted, just no email is sent).
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.coerce.number().int().min(1).max(65535).default(587),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
+  SMTP_SECURE: z.coerce.boolean().optional(),
+  SMTP_FROM: z.string().optional(),
+  // Recipient address for lead notifications. Defaults to SMTP_FROM when
+  // unset so a single env var is enough for the common case.
+  LEAD_NOTIFY_TO: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

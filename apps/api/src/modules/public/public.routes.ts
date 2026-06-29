@@ -6,6 +6,9 @@ import { createLeadSchema, productCategorySchema } from '@sahelwaga/shared';
 import { prisma } from '../../lib/prisma.js';
 import { validate } from '../../middleware/validate.js';
 import { AuditAction, recordAudit } from '../../lib/audit.js';
+import { sendMail } from '../../lib/mailer.js';
+import { config } from '../../config/env.js';
+import { logger } from '../../lib/logger.js';
 
 const router: Router = Router();
 
@@ -98,7 +101,49 @@ router.post('/leads', leadLimiter, validate(createLeadSchema), async (req, res) 
     },
   });
 
+  // Fire-and-forget notification email. Failures must never break the
+  // response — the lead is already safely persisted.
+  void notifyLead(lead).catch((err) => {
+    logger.error({ err, leadId: lead.id }, 'lead notification email failed');
+  });
+
   res.status(201).json({ id: lead.id, status: lead.status });
 });
+
+interface LeadEmailInput {
+  id: string;
+  kind: string;
+  name: string;
+  email: string;
+  company: string | null;
+  country: string | null;
+  message: string | null;
+}
+
+async function notifyLead(lead: LeadEmailInput): Promise<void> {
+  const to = config.LEAD_NOTIFY_TO ?? config.SMTP_FROM;
+  if (!to) return; // No recipient configured — nothing to do.
+  const subject = `New ${lead.kind.toLowerCase()} lead from ${lead.name}`;
+  const lines = [
+    `A new lead was submitted via the public contact form.`,
+    ``,
+    `Kind:    ${lead.kind}`,
+    `Name:    ${lead.name}`,
+    `Email:   ${lead.email}`,
+    `Company: ${lead.company ?? '—'}`,
+    `Country: ${lead.country ?? '—'}`,
+    ``,
+    `Message:`,
+    lead.message?.trim() ? lead.message : '(no message provided)',
+    ``,
+    `Lead ID: ${lead.id}`,
+  ];
+  await sendMail({
+    to,
+    subject,
+    text: lines.join('\n'),
+    replyTo: lead.email,
+  });
+}
 
 export { router as publicRouter };
