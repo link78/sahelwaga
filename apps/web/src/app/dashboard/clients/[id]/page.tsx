@@ -100,6 +100,12 @@ export default function ClientDetailPage() {
         </div>
         <div className="flex gap-2">
           <Link
+            href={`/dashboard/portal-invitations?clientId=${id}`}
+            className="rounded-md border border-brand-green-200 bg-brand-green-50 px-4 py-2 text-sm text-brand-green-800 hover:bg-brand-green-100"
+          >
+            Invite portal user
+          </Link>
+          <Link
             href={`/dashboard/clients/${id}/edit`}
             className="rounded-md border border-brand-neutral-200 px-4 py-2 text-sm hover:bg-brand-neutral-50"
           >

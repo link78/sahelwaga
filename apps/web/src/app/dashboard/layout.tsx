@@ -15,6 +15,7 @@ const nav = [
   { href: '/dashboard/documents', label: 'Documents' },
   { href: '/dashboard/stock', label: 'Stock' },
   { href: '/dashboard/leads', label: 'Leads' },
+  { href: '/dashboard/portal-invitations', label: 'Portal invitations' },
   { href: '/dashboard/compliance', label: 'Compliance' },
   { href: '/dashboard/audit-logs', label: 'Audit log' },
 ];

@@ -111,6 +111,12 @@ export default function SupplierDetailPage() {
         </div>
         <div className="flex gap-2">
           <Link
+            href={`/dashboard/portal-invitations?supplierId=${supplier.id}`}
+            className="rounded-md border border-brand-green-200 bg-brand-green-50 px-4 py-2 text-sm text-brand-green-800 hover:bg-brand-green-100"
+          >
+            Invite portal user
+          </Link>
+          <Link
             href={`/dashboard/suppliers/${supplier.id}/edit`}
             className="rounded-md border border-brand-neutral-100 px-4 py-2 text-sm hover:bg-brand-neutral-50"
           >
