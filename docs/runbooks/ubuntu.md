@@ -161,6 +161,11 @@ User=sahelwaga
 WorkingDirectory=/home/sahelwaga/app
 Environment=NODE_ENV=production
 Environment=PORT=3000
+# Public API URL baked into the browser bundle (see note below). When the API
+# is served from its own subdomain, set this to that HTTPS URL.
+Environment=NEXT_PUBLIC_API_URL=https://api.medsupplyimportdistribution.com
+# Server-only API address used for SSR / the same-origin /public/* proxy.
+Environment=API_INTERNAL_URL=http://127.0.0.1:4000
 ExecStart=/usr/bin/pnpm --filter @sahelwaga/web start
 Restart=on-failure
 RestartSec=5
@@ -168,6 +173,16 @@ RestartSec=5
 [Install]
 WantedBy=multi-user.target
 ```
+
+> `NEXT_PUBLIC_API_URL` is **inlined into the browser bundle at build time**, so
+> the systemd `Environment=` line alone is not enough — it must also be present
+> when `pnpm --filter @sahelwaga/web build` runs (step 4). Export it for the
+> build, e.g.
+> `NEXT_PUBLIC_API_URL=https://api.medsupplyimportdistribution.com sudo -u sahelwaga -E pnpm --filter @sahelwaga/web build`,
+> then restart `sahelwaga-web`. If it is missing at build time the browser
+> falls back to deriving `https://api.<page-domain>`; setting it explicitly is
+> still preferred. The runtime `Environment=` value is what SSR and the
+> `/public/*` proxy use.
 
 The API `start` script runs `prisma migrate deploy` on boot (`pnpm run
 db:migrate && tsx src/server.ts`), so the schema is created/updated every time

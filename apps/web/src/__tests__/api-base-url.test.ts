@@ -41,22 +41,33 @@ describe('deriveBrowserApiBaseUrl', () => {
     ).toBe('http://66.94.119.88:4000');
   });
 
-  it('never derives https://host:4000 — falls back to the page origin', () => {
+  it('derives the api. subdomain (not host:4000) for an HTTPS apex page', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const result = deriveBrowserApiBaseUrl(
       'http://localhost:4000',
       loc('https:', 'medsupplyimportdistribution.com'),
     );
-    expect(result).toBe('https://medsupplyimportdistribution.com');
+    expect(result).toBe('https://api.medsupplyimportdistribution.com');
     expect(result).not.toContain(':4000');
     expect(warn).toHaveBeenCalledOnce();
   });
 
-  it('warns and uses the origin when config is missing on an HTTPS page', () => {
+  it('replaces the app/www label with api on an HTTPS subdomain page', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     expect(
       deriveBrowserApiBaseUrl(undefined, loc('https:', 'app.example.com')),
-    ).toBe('https://app.example.com');
+    ).toBe('https://api.example.com');
+    expect(
+      deriveBrowserApiBaseUrl(undefined, loc('https:', 'www.example.com')),
+    ).toBe('https://api.example.com');
+    expect(warn).toHaveBeenCalled();
+  });
+
+  it('keeps the page origin for an HTTPS bare-IP host (no subdomain)', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(
+      deriveBrowserApiBaseUrl('http://localhost:4000', loc('https:', '66.94.119.88')),
+    ).toBe('https://66.94.119.88');
     expect(warn).toHaveBeenCalledOnce();
   });
 });
