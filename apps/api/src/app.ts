@@ -27,6 +27,7 @@ import { leadsRouter } from './modules/leads/leads.routes.js';
 import { auditLogsRouter } from './modules/audit-logs/audit-logs.routes.js';
 import { complianceRouter } from './modules/compliance/compliance.routes.js';
 import { portalRouter } from './modules/portal/portal.routes.js';
+import { portalInvitationsRouter } from './modules/portal-invitations/portal-invitations.routes.js';
 
 export function createApp(): express.Express {
   const app = express();
@@ -88,6 +89,7 @@ export function createApp(): express.Express {
   app.use('/audit-logs', auditLogsRouter);
   app.use('/compliance', complianceRouter);
   app.use('/portal', portalRouter);
+  app.use('/portal-invitations', portalInvitationsRouter);
 
   app.use((_req, res) => res.status(404).json({ error: 'Not Found' }));
   app.use(errorHandler);

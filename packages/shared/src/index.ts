@@ -10,3 +10,4 @@ export * from './schemas/document.js';
 export * from './schemas/stock.js';
 export * from './schemas/lead.js';
 export * from './schemas/audit-log.js';
+export * from './schemas/portal-invitation.js';

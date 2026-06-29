@@ -53,9 +53,11 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  uploadedDocuments Document[] @relation("UploadedBy")
-  auditLogs         AuditLog[] @relation("Actor")
-  refreshTokens     RefreshToken[]
+  uploadedDocuments  Document[]         @relation("UploadedBy")
+  auditLogs          AuditLog[]         @relation("Actor")
+  refreshTokens      RefreshToken[]
+  invitationsSent    PortalInvitation[] @relation("InvitedBy")
+  acceptedInvitation PortalInvitation[] @relation("AcceptedUser")
 
   @@index([supplierId])
   @@index([clientId])
@@ -124,28 +126,29 @@ enum WhoGmpStatus {
 }
 
 model Supplier {
-  id             String         @id @default(cuid())
-  name           String
-  country        String
-  status         SupplierStatus @default(PROSPECT)
-  whoGmpStatus   WhoGmpStatus   @default(UNKNOWN)
-  rating         SupplierRating?
-  notes          String?
+  id                   String          @id @default(cuid())
+  name                 String
+  country              String
+  status               SupplierStatus  @default(PROSPECT)
+  whoGmpStatus         WhoGmpStatus    @default(UNKNOWN)
+  rating               SupplierRating?
+  notes                String?
   // Public-catalog visibility toggle for supplier name (competitive reasons)
-  showSupplierPublicly Boolean @default(false)
+  showSupplierPublicly Boolean         @default(false)
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  contacts       SupplierContact[]
-  vetting        SupplierVetting?
-  exportRecords  SupplierExportRecord[]
-  priceTiers     SupplierPriceTier[]
-  productLinks   ProductSupplier[]
-  purchaseOrders PurchaseOrder[]
-  portalUsers    User[]
-  documentLinks  DocumentLink[]
+  contacts          SupplierContact[]
+  vetting           SupplierVetting?
+  exportRecords     SupplierExportRecord[]
+  priceTiers        SupplierPriceTier[]
+  productLinks      ProductSupplier[]
+  purchaseOrders    PurchaseOrder[]
+  portalUsers       User[]
+  documentLinks     DocumentLink[]
+  portalInvitations PortalInvitation[]
 
   @@index([status])
   @@index([deletedAt])
@@ -167,18 +170,18 @@ model SupplierContact {
 }
 
 model SupplierVetting {
-  id                     String    @id @default(cuid())
-  supplierId             String    @unique
-  supplier               Supplier  @relation(fields: [supplierId], references: [id], onDelete: Cascade)
-  whoGmpVerified         Boolean   @default(false)
-  coaReceived            Boolean   @default(false)
-  stabilityHotClimate    Boolean   @default(false)
-  westAfricaReferences   Boolean   @default(false)
-  reviewerId             String?
-  decisionDate           DateTime?
-  notes                  String?
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
+  id                   String    @id @default(cuid())
+  supplierId           String    @unique
+  supplier             Supplier  @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  whoGmpVerified       Boolean   @default(false)
+  coaReceived          Boolean   @default(false)
+  stabilityHotClimate  Boolean   @default(false)
+  westAfricaReferences Boolean   @default(false)
+  reviewerId           String?
+  decisionDate         DateTime?
+  notes                String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 }
 
 model SupplierExportRecord {
@@ -250,16 +253,16 @@ enum ProductStatus {
 }
 
 model Product {
-  id                 String          @id @default(cuid())
-  name               String
-  inn                String?
-  category           ProductCategory
-  form               String?
-  strength           String?
-  packSize           String?
-  shelfLifeMonths    Int?
-  storageConditions  String?
-  status             ProductStatus   @default(DRAFT)
+  id                String          @id @default(cuid())
+  name              String
+  inn               String?
+  category          ProductCategory
+  form              String?
+  strength          String?
+  packSize          String?
+  shelfLifeMonths   Int?
+  storageConditions String?
+  status            ProductStatus   @default(DRAFT)
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -295,30 +298,30 @@ model ProductSupplier {
 }
 
 model ProductPricing {
-  id                   String   @id @default(cuid())
-  productId            String
-  product              Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  fobCost              Decimal  @db.Decimal(14, 4)
-  landedCostEstimate   Decimal? @db.Decimal(14, 4)
-  currency             Currency
-  effectiveFrom        DateTime @default(now())
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  id                 String   @id @default(cuid())
+  productId          String
+  product            Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  fobCost            Decimal  @db.Decimal(14, 4)
+  landedCostEstimate Decimal? @db.Decimal(14, 4)
+  currency           Currency
+  effectiveFrom      DateTime @default(now())
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   @@index([productId, effectiveFrom])
 }
 
 model ClientPriceList {
-  id        String   @id @default(cuid())
-  name      String
+  id         String      @id @default(cuid())
+  name       String
   // Optional binding to a specific client; null means "default for a client type"
-  clientId  String?
-  client    Client?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  clientId   String?
+  client     Client?     @relation(fields: [clientId], references: [id], onDelete: SetNull)
   clientType ClientType?
-  currency  Currency
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  currency   Currency
+  isActive   Boolean     @default(true)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
 
   items ClientPriceListItem[]
 
@@ -326,16 +329,16 @@ model ClientPriceList {
 }
 
 model ClientPriceListItem {
-  id            String          @id @default(cuid())
-  priceListId   String
-  priceList     ClientPriceList @relation(fields: [priceListId], references: [id], onDelete: Cascade)
-  productId     String
-  product       Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
-  unitPrice     Decimal         @db.Decimal(14, 4)
-  validFrom     DateTime?
-  validTo       DateTime?
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  id          String          @id @default(cuid())
+  priceListId String
+  priceList   ClientPriceList @relation(fields: [priceListId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  unitPrice   Decimal         @db.Decimal(14, 4)
+  validFrom   DateTime?
+  validTo     DateTime?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
 
   @@unique([priceListId, productId])
 }
@@ -372,11 +375,12 @@ model Client {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  contacts      ClientContact[]
-  priceLists    ClientPriceList[]
-  salesOrders   SalesOrder[]
-  portalUsers   User[]
-  documentLinks DocumentLink[]
+  contacts          ClientContact[]
+  priceLists        ClientPriceList[]
+  salesOrders       SalesOrder[]
+  portalUsers       User[]
+  documentLinks     DocumentLink[]
+  portalInvitations PortalInvitation[]
 
   @@index([type])
   @@index([status])
@@ -440,9 +444,9 @@ model Document {
 // Exactly one of the FK columns is expected to be non-null per row, enforced
 // at the application layer (Prisma can't enforce XOR constraints natively).
 model DocumentLink {
-  id             String   @id @default(cuid())
-  documentId     String
-  document       Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  id         String   @id @default(cuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
 
   supplierId      String?
   supplier        Supplier?      @relation(fields: [supplierId], references: [id], onDelete: Cascade)
@@ -483,20 +487,20 @@ enum PurchaseOrderStatus {
 }
 
 model PurchaseOrder {
-  id                  String              @id @default(cuid())
-  poNumber            String              @unique
-  supplierId          String
-  supplier            Supplier            @relation(fields: [supplierId], references: [id], onDelete: Restrict)
-  status              PurchaseOrderStatus @default(DRAFT)
-  currency            Currency
-  incoterm            Incoterm?
-  targetShipmentDate  DateTime?
-  notes               String?
+  id                 String              @id @default(cuid())
+  poNumber           String              @unique
+  supplierId         String
+  supplier           Supplier            @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  status             PurchaseOrderStatus @default(DRAFT)
+  currency           Currency
+  incoterm           Incoterm?
+  targetShipmentDate DateTime?
+  notes              String?
   // Cached totals (sum of lines). Recompute on line write.
-  subtotal            Decimal             @default(0) @db.Decimal(14, 4)
-  total               Decimal             @default(0) @db.Decimal(14, 4)
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
+  subtotal           Decimal             @default(0) @db.Decimal(14, 4)
+  total              Decimal             @default(0) @db.Decimal(14, 4)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
 
   lines         PurchaseOrderLine[]
   importBatches ImportBatch[]
@@ -530,18 +534,18 @@ enum ImportBatchStatus {
 }
 
 model ImportBatch {
-  id                String            @id @default(cuid())
-  batchNumber       String            @unique
-  purchaseOrderId   String
-  purchaseOrder     PurchaseOrder     @relation(fields: [purchaseOrderId], references: [id], onDelete: Restrict)
-  dgpmlAuthNumber   String?
-  status            ImportBatchStatus @default(PENDING)
-  shippedAt         DateTime?
-  arrivedAt         DateTime?
-  customsClearedAt  DateTime?
-  notes             String?
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
+  id               String            @id @default(cuid())
+  batchNumber      String            @unique
+  purchaseOrderId  String
+  purchaseOrder    PurchaseOrder     @relation(fields: [purchaseOrderId], references: [id], onDelete: Restrict)
+  dgpmlAuthNumber  String?
+  status           ImportBatchStatus @default(PENDING)
+  shippedAt        DateTime?
+  arrivedAt        DateTime?
+  customsClearedAt DateTime?
+  notes            String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
 
   lines         ImportBatchLine[]
   documentLinks DocumentLink[]
@@ -640,19 +644,19 @@ enum StockMovementReason {
 }
 
 model StockMovement {
-  id          String              @id @default(cuid())
-  productId   String
-  product     Product             @relation(fields: [productId], references: [id], onDelete: Restrict)
-  locationId  String
-  location    StockLocation       @relation(fields: [locationId], references: [id], onDelete: Restrict)
-  qty         Int // positive in / negative out
-  reason      StockMovementReason
-  refType     String? // e.g. 'ImportBatch', 'SalesOrder'
-  refId       String?
-  lotNumber   String?
-  expiryDate  DateTime?
-  occurredAt  DateTime            @default(now())
-  createdAt   DateTime            @default(now())
+  id         String              @id @default(cuid())
+  productId  String
+  product    Product             @relation(fields: [productId], references: [id], onDelete: Restrict)
+  locationId String
+  location   StockLocation       @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  qty        Int // positive in / negative out
+  reason     StockMovementReason
+  refType    String? // e.g. 'ImportBatch', 'SalesOrder'
+  refId      String?
+  lotNumber  String?
+  expiryDate DateTime?
+  occurredAt DateTime            @default(now())
+  createdAt  DateTime            @default(now())
 
   @@index([productId, locationId])
   @@index([refType, refId])
@@ -689,5 +693,52 @@ model Lead {
   updatedAt DateTime   @updatedAt
 
   @@index([kind])
+  @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// Portal user invitations
+// ---------------------------------------------------------------------------
+// Admins create invitations for an external supplier/client contact to claim
+// a SUPPLIER_PORTAL or CLIENT_PORTAL account. The raw token is emailed to the
+// invitee and never persisted — only its SHA-256 hash is stored, so a DB
+// read leak cannot accept invitations. Acceptance creates the User row,
+// sets its password, links it to the org, and marks the invitation ACCEPTED.
+
+enum PortalInvitationStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+  EXPIRED
+}
+
+model PortalInvitation {
+  id             String                 @id @default(cuid())
+  email          String
+  name           String
+  role           UserRole // SUPPLIER_PORTAL or CLIENT_PORTAL (enforced in app code)
+  // Exactly one of supplierId / clientId is set, matching `role`.
+  supplierId     String?
+  supplier       Supplier?              @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  clientId       String?
+  client         Client?                @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  status         PortalInvitationStatus @default(PENDING)
+  // SHA-256 hex hash of the opaque token sent to the invitee. The raw token
+  // is never stored. Unique so token lookup is a single indexed query.
+  tokenHash      String                 @unique
+  expiresAt      DateTime
+  invitedById    String?
+  invitedBy      User?                  @relation("InvitedBy", fields: [invitedById], references: [id], onDelete: SetNull)
+  acceptedAt     DateTime?
+  acceptedUserId String?
+  acceptedUser   User?                  @relation("AcceptedUser", fields: [acceptedUserId], references: [id], onDelete: SetNull)
+  revokedAt      DateTime?
+  lastSentAt     DateTime               @default(now())
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+
+  @@index([email])
+  @@index([supplierId])
+  @@index([clientId])
   @@index([status])
 }

@@ -16,4 +16,5 @@ export const RBAC: Record<string, { read: UserRole[]; write: UserRole[] }> = {
   leads: { read: ['ADMIN', 'OPS', 'SALES'], write: ['ADMIN', 'OPS', 'SALES'] },
   auditLogs: { read: ['ADMIN'], write: ['ADMIN'] },
   compliance: { read: ['ADMIN', 'OPS'], write: ['ADMIN', 'OPS'] },
+  portalInvitations: { read: ['ADMIN'], write: ['ADMIN'] },
 };

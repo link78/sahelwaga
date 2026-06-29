@@ -51,6 +51,12 @@ const envSchema = z.object({
   // Recipient address for lead notifications. Defaults to SMTP_FROM when
   // unset so a single env var is enough for the common case.
   LEAD_NOTIFY_TO: z.string().optional(),
+  // Public-facing base URL of the web app (no trailing slash). Used to build
+  // invitation acceptance links in transactional emails. Falls back to the
+  // first CORS origin when unset.
+  WEB_APP_URL: z.string().optional(),
+  // TTL for portal invitation tokens (e.g. "7d", "72h"). Defaults to 7 days.
+  PORTAL_INVITATION_TTL: z.string().default('7d'),
 });
 
 const parsed = envSchema.safeParse(process.env);
